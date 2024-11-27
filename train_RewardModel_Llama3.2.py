@@ -1,12 +1,12 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1, 2'
 import json
 import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from transformers import MllamaForConditionalGeneration, AutoProcessor, AdamW
+from transformers import MllamaForConditionalGeneration, AutoProcessor, AdamW, AutoTokenizer
 from sklearn.metrics import accuracy_score
 from torch.utils.data import DataLoader, Dataset
 import pandas as pd
@@ -36,17 +36,23 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         prompt_answer = self.data_js[idx]['response']
-        if os.path.isfile(f"datasets/{dataset}/{self.part}/images/{idx}.png"):
-            image = Image.open(f"datasets/{dataset}/{self.part}/images/{idx}.png")
+        if os.path.isfile(f"datasets/{dataset}/images/{self.part}/{idx}.png"):
+            image = Image.open(f"datasets/{dataset}/images/{self.part}/{idx}.png")
+            inputs = self.processor(
+                image,
+                prompt_answer,
+                add_special_tokens=False,
+                return_tensors="pt"
+            ).to('cuda')
         else:
             image = None
+            inputs = self.processor(
+                image,
+                prompt_answer,
+                add_special_tokens=False,
+                return_tensors="pt"
+            ).to('cuda')
 
-        inputs = self.processor(
-            image,
-            prompt_answer,
-            add_special_tokens=False,
-            return_tensors="pt"
-        ).to('cuda:0')
         label = self.data_js[idx]['true_false']
         if label:
             label = 1
@@ -54,7 +60,8 @@ class MyDataset(Dataset):
             label = -1
 
         return {
-            'inputs': inputs,
+            'input_ids': inputs['input_ids'].squeeze(),
+            'attention_mask': inputs['attention_mask'].squeeze(),
             'label': label
         }
 
@@ -65,15 +72,15 @@ class Llama3_2_RM(nn.Module):
         self.base_model = base
         self.LN = nn.Linear(vocab_size, 1)
 
-    def forward(self, inputs):
-        outputs = self.base_model(**inputs, max_new_tokens=1000).logits[:, -1, :]
+    def forward(self, input_ids, attention_mask):
+        outputs = self.base_model(input_ids=input_ids,attention_mask=attention_mask).logits[:, -1, :]
         value_outputs = self.LN(outputs)
         return value_outputs.squeeze(dim=1)
 
 
 # Load training set, validation set, and test set data
-train_js = f'result/{dataset}/train.json'
-val_js = f'result/{dataset}/validate.json'
+train_js = f'results/{dataset}/train.json'
+val_js = f'results/{dataset}/validate.json'
 
 
 def read_json(source):
@@ -90,14 +97,14 @@ train_dataset = MyDataset(train_json, processor,'train')
 val_dataset = MyDataset(val_json, processor,'validate')
 
 # Create data loaders
-batch_size = 3  # Set batch size
+batch_size = 1  # Set batch size
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
 # Set device and model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device, '\n')
-vocab_size = model.config.vocab_size
+vocab_size = model.vocab_size
 print(vocab_size)
 VM = Llama3_2_RM(model, vocab_size)
 VM.to(device)
@@ -116,11 +123,12 @@ for epoch in range(num_epochs):
     VM.train()
     train_loss = 0.0
     for batch in tqdm(train_dataloader):
-        inputs = batch['inputs'].to(device)
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
         labels = batch['label'].to(dtype=torch.float32).to(device)
 
         optimizer.zero_grad()
-        outputs = VM(inputs=inputs)
+        outputs = VM(input_ids=input_ids, attention_mask=attention_mask)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -136,9 +144,12 @@ for epoch in range(num_epochs):
     val_labels = []
     with torch.no_grad():
         for batch in tqdm(val_dataloader):
-            inputs = batch['inputs'].to(device)
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
             labels = batch['label'].to(dtype=torch.float32).to(device)
-            outputs = VM(inputs=inputs)
+
+            optimizer.zero_grad()
+            outputs = VM(input_ids=input_ids, attention_mask=attention_mask)
             loss = criterion(outputs, labels)
             val_loss += loss.item()
             val_labels.extend(labels.tolist())
