@@ -99,10 +99,10 @@ class phi_3_5_vision_instruct:
         answer = matches[-1] if matches else None  # 获取最后一个匹配项
 
         if answer == i['ground_truth']:
-            print(f'{i['id']}:Bingo!')
+            print(f"{i['id']}:Bingo!")
             self.responses[index]["true_false"] = True
         else:
-            print(f'{i['id']}:Not Bingo!')
+            print(f"{i['id']}:Not Bingo!")
             self.responses[index]["true_false"] = False
         return self.responses[index]["true_false"]
 

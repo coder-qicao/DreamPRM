@@ -1,14 +1,14 @@
 import json
 from datasets import load_dataset
 
-class MathVista:
+class Llava_CoT_utils:
     def __init__(self):
-        self.ds = load_dataset("AI4Math/MathVista")
+        self.ds = load_dataset("Xkev/LLaVA-CoT-100k")
         self.data = []
 
-    def save_as_json(self, path="datasets/MathVista/", part="testmini"):
-        for i in range(len(self.ds[part])):
-            problem = self.ds[part][i]
+    def save_as_json(self, path="dataset/MathVista/"):
+        for i in range(len(self.ds)):
+            problem = self.ds[i]
             self.data.append(self.build_prompt(problem, i))
             if problem['image'] is not None:
                 use_caption = True
@@ -27,10 +27,10 @@ class MathVista:
     def get_image(self,problem, use_caption, id, part):
         if use_caption:
             image_url = problem['decoded_image']
-            address = f"datasets/MathVista/images/{part}/{id}.png"
+            address = f"dataset/MathVista/images/{part}/{id}.png"
             image_url.save(address, format='PNG')
 
-    def get_choice_text(self,probelm, options):
+    def get_gpt_text(self,probelm, options):
         if options:
             choices = probelm['choices']
             choice_list = []
@@ -52,6 +52,14 @@ class MathVista:
     def get_query(self, problem):
         return problem['query']
 
+    def get_question_type(self, problem):
+        return problem['question_type']
+
+    def get_hint(self, input):
+        hint = input.split("\nQuestion:")[0]
+        question = input.split("\nQuestion:")[1]
+        return hint, question
+
 
     def build_prompt(self, problems, test_qid):
         print(f"saving data {test_qid}")
@@ -61,15 +69,19 @@ class MathVista:
             choice = self.get_choice_text(problems, options)
             answer = self.get_answer(problems, options)
             input = self.get_query(problems)
+            hint, question = self.get_hint(input)
+            question_type = self.get_question_type(problems)
             ground_truth = answer
         else:
             options = None
             answer = self.get_answer(problems, options)
             input = self.get_query(problems)
+            hint, question = self.get_hint(input)
+            question_type = self.get_question_type(problems)
             ground_truth = answer
-        return {"id":test_qid, "input": input, "ground_truth": ground_truth}
+        return {"id":test_qid, "input": question, "hint": hint, "type": question_type, "ground_truth": ground_truth}
 
 
 if __name__ == "__main__":
-    ds = MathVista()
-    ds.save_as_json(path="datasets/MathVista/", part="testmini")
+    ds = Llava_CoT_utils()
+    # ds.save_as_json(path="dataset/MathVista/", part="testmini")
