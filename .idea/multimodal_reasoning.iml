@@ -2,7 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Remote Python 3.10.15 (sftp://qi@ecepxiegpu3.ucsd.edu:22/home/qi/anaconda3/envs/multimodal_reasoning/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.10.15 (sftp://q9cao@ecepxiegpu3.ucsd.edu:22/home/q9cao/anaconda3/envs/multimodal_reasoning/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

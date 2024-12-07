@@ -1,8 +1,8 @@
 import torch
-from Reward_model.reward_model import Phi_Vision_RM
+from Reward_model.reward_model_testing import Phi_Vision_RM
 
-def load_Phi_Vision_RM(model_id = "models/phi3_5/VM_base_best_checkpoint",
-                      LN_id = "models/phi3_5/VM_LN_best_checkpoint.pth"):
+def load_Phi_Vision_RM(model_id = "Reward_model/weights/base_model",
+                      LN_id = "Reward_model/weights/LN.pt"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     best_model = Phi_Vision_RM(model_id)
     best_model.LN.load_state_dict(torch.load(LN_id))

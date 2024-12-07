@@ -1,28 +1,44 @@
+import sys
+sys.path.append("/home/q9cao/python_project/multimodal_reasoning")
 import os
-import torch
-from utils.json_processor import read_json, write_json
-from utils.phi_vision_utils.load_pretrained_model_and_processor import load_pretrained_model, load_pretrained_processor
-from Reward_model.reward_model_utils import load_Phi_Vision_RM, generate_reward_model_input
-from utils.response_collector import ResponseCollector
-from utils.phi_vision_utils.two_shots_prompt_building import two_shots_prompt_building_single_image
-from utils.phi_vision_utils.generate_response import generate_response
-from utils.split_step import split_step
-from utils.verify_answer import verify_answer_multi_choice, verify_answer
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3'
-path = "/home/qi/python_project/multimodal_reasoning"
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+path = "/home/q9cao/python_project/multimodal_reasoning"
 os.chdir(path)
 
-dataset = 'MathVista'
-part = 'testmini'
+import torch
+from utils.json_processor import read_json, write_json
+from utils.internVL_utils.load_pretrained_model_and_processor import load_pretrained_model, load_pretrained_tokenizer
+from utils.response_collector import ResponseCollector
+from reweighting.utils import load_QwenVL_RM, generate_reward_model_input
+from utils.split_step import split_step
+from transformers import AutoProcessor
+import numpy as np
+
+dataset = 'WeMath'
+part = 'test'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-dataset_json_file_path = f"datasets/{dataset}/{part}.json"
+dataset_json_file_path = f"dataset/{dataset}/{part}.json"
 dataset_json = read_json(dataset_json_file_path)
 model = load_pretrained_model()
-processor = load_pretrained_processor()
-reward_model = load_Phi_Vision_RM()
+tokenizer = load_pretrained_tokenizer()
+responses = ResponseCollector(out_path=F"BoN/results/{dataset}_InternVL_MPO.json")
+processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct")
+reward_model = load_QwenVL_RM(model_id = "reweighting/weights/base_model",
+                      LN_id = "reweighting/weights/LN_weights.pt")
 reward_model.eval()
-responses = ResponseCollector(out_path="BoN/results/MathVista.json")
+N_json = [f"inference/results/{dataset}/InternVL-MPO/0.json", f"inference/results/{dataset}/InternVL-MPO/1.json",
+          f"inference/results/{dataset}/InternVL-MPO/2.json", f"inference/results/{dataset}/InternVL-MPO/3.json",
+          f"inference/results/{dataset}/InternVL-MPO/4.json", f"inference/results/{dataset}/InternVL-MPO/5.json",
+          f"inference/results/{dataset}/InternVL-MPO/6.json", f"inference/results/{dataset}/InternVL-MPO/7.json",]
+N = []
+gpt_eval_json = {}
+
+for response in N_json:
+    f = read_json(response)
+    N.append(f)
+true_num = 0
+sequence_class = []
+total_num = 0
 
 for data in dataset_json:
     # example data:
@@ -34,53 +50,62 @@ for data in dataset_json:
     #     # "hint", "question type"
     # }
     flag = True
-    index = 1
-    N = 4
     best_answer = ''
     input = data['input']
-    image_path = f"datasets/{dataset}/images/{part}/{data['id']}.png"
+    image_path = f"dataset/{dataset}/images/{part}/{data['id']}.png"
     if not os.path.isfile(image_path):
         continue
-    while flag:
-        prompt, image = two_shots_prompt_building_single_image(input, image_path, processor, add=best_answer)
-        max_score = -10
-        for i in range(N):
-            response = generate_response(processor, model, prompt, image, temperature=0.7, do_sample=True)
+    max_score = -10
+    true_N = 0
+    for i in N:
+        index = 1
+        min_score = 10
+        response = i[total_num]['response']
+        mean_score = 0
+        scores = []
+        while flag:
             response_step = split_step(index, response)
-            step_prompt, image = two_shots_prompt_building_single_image(input, image_path, processor, add=best_answer+response_step)
             if response_step == "":
-                flag = False
-                reward_inputs = generate_reward_model_input(step_prompt, image, processor)
-                input_ids = reward_inputs['input_ids'].unsqueeze(0).to(device)
-                attention_mask = reward_inputs['attention_mask'].unsqueeze(0).to(device)
-                pixel_values = reward_inputs['pixel_values'].unsqueeze(0).to(device)
-                image_sizes = reward_inputs['image_sizes'].unsqueeze(0).to(device)
-                with torch.no_grad():
-                    score = reward_model(input_ids=input_ids, attention_mask=attention_mask, pixel_values=pixel_values,
-                                         image_sizes=image_sizes)
-                if score > max_score:
-                    max_score = score
-                    candidate = response
+                if index == 1:
+                    min_score = 0.5
+                    scores.append(0.5)
+                else:
+                    mean_score = mean_score / (index - 1)
+                break
             else:
-                flag = True
-                reward_inputs = generate_reward_model_input(step_prompt, image, processor)
-                input_ids = reward_inputs['input_ids'].unsqueeze(0).to(device)
-                attention_mask = reward_inputs['attention_mask'].unsqueeze(0).to(device)
+                reward_inputs = generate_reward_model_input(input, response_step, image_path, processor)
+                input_ids = reward_inputs['input_ids'].to(device)
+                attention_mask = reward_inputs['attention_mask'].to(device)
                 pixel_values = reward_inputs['pixel_values'].unsqueeze(0).to(device)
-                image_sizes = reward_inputs['image_sizes'].unsqueeze(0).to(device)
+                image_grid_thw = reward_inputs['image_grid_thw'].to(device)
                 with torch.no_grad():
                     score = reward_model(input_ids=input_ids, attention_mask=attention_mask, pixel_values=pixel_values,
-                                        image_sizes=image_sizes)
-                if score > max_score:
-                    max_score = score
-                    candidate = response_step
-        index += 1
-        best_answer += candidate
+                                        image_grid_thw=image_grid_thw)
+                    mean_score += score
+                    scores.append(round(float(score),3))
+                # if score < min_score:
+                #     min_score = score
+            index += 1
+        if i[total_num]['true_false']:
+            true_N += 1
+        print(scores, i[total_num]['true_false'])
+        sequence_class.append({"sequence":scores, "mean": np.mean(scores), "label": i[total_num]['true_false']})
+        if mean_score >= max_score:
+            best_answer = response
+            true_false = i[total_num]['true_false']
+            max_score = mean_score
 
-    true_false = verify_answer(best_answer, data['ground_truth'], data['question_type'])
-    print(f"{data['id']}:{true_false}")
+    total_num += 1
+    # true_false = verify_answer(best_answer, data['ground_truth'], data['type'])
+    if true_false:
+        true_num += 1
+    print(f"{data['id']}:{true_false}, True N:{true_N}, total:{true_num}")
     responses.add_response(best_answer, data['input'], data['id'], true_false)
+    # gpt_eval_json[data['vid']] = best_answer.split("Final answer: ")[-1]
     if data['id'] % 100 == 0:
         write_json(responses.get_out_path(), responses.get_responses())
 
+print(f"Accuracy {true_num/(total_num+1) * 100:.2f}%")
 write_json(responses.get_out_path(), responses.get_responses())
+write_json(f"BoN/results/{dataset}_internVL_sequence.json",sequence_class)
+# write_json(f"BoN/results/{dataset}_internVL_gpt_eval.json", gpt_eval_json)

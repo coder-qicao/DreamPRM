@@ -1,7 +1,7 @@
 import re
 
 def verify_answer_multi_choice(answer, ground_truth):
-    matches = re.findall(r'(?<!Answer)([ABCD])', answer)
+    matches = re.findall(r'(?<!Answer)([ABCDEF])', answer)
     answer = matches[-1] if matches else None  # 获取最后一个匹配项
 
     if answer == ground_truth:

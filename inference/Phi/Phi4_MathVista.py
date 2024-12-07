@@ -1,0 +1,40 @@
+import sys
+sys.path.append("/home/q9cao/python_project/multimodal_reasoning")
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+path = "/home/q9cao/python_project/multimodal_reasoning"
+os.chdir(path)
+
+import torch
+from utils.json_processor import read_json, write_json
+from utils.phi4_utils.load_pretrained_model_and_processor import load_pretrained_model, load_pretrained_processor
+from utils.response_collector import ResponseCollector
+from utils.phi4_utils.one_shot_CoT_prompt_building import one_shot_prompt_building_single_image
+from utils.phi4_utils.generate_response import generate_response
+from utils.split_step import split_step
+from utils.verify_answer import verify_answer_multi_choice, verify_answer
+
+dataset = 'MathVista'
+part = 'testmini'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+dataset_json_file_path = f"dataset/{dataset}/{part}.json"
+dataset_json = read_json(dataset_json_file_path)
+model = load_pretrained_model()
+processor = load_pretrained_processor()
+responses = ResponseCollector(out_path="inference/results/MathVista/Phi4/0.json")
+
+for data in dataset_json:
+    input = data['input']
+    image_path = f"dataset/{dataset}/images/{part}/{data['id']}.png"
+    if not os.path.isfile(image_path):
+        continue
+    prompt= one_shot_prompt_building_single_image(input, hint=data['hint'])
+    response = generate_response(processor, model, prompt, image_path, do_sample=True, temperature=0.3)
+    print(response)
+    true_false = verify_answer(response, data['ground_truth'], data['type'])
+    print(f"{data['id']}:{true_false}")
+    responses.add_response(response, data['input'], data['id'], true_false)
+    if data['id'] % 100 == 0:
+        write_json(responses.get_out_path(), responses.get_responses())
+
+write_json(responses.get_out_path(), responses.get_responses())
