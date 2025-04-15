@@ -23,11 +23,15 @@ def judge_vqa_answer(question, ground_truth, candidate_answer, model, tokenizer)
     # 构造 prompt，要求模型判断答案是否正确，并给出简要解释
     prompt = (
         "Task: Do not attempt to solve the question. Your only task is to verify if the candidate answer "
-        "matches the ground truth. For multiple-choice questions (when options are provided), first check that "
-        "the candidate answer is one of the given options and then verify it exactly matches the ground truth. "
+        "matches the ground truth. For multiple-choice questions (when options are provided), "
+        "just verify if the candidate answer matches the ground truth. The candidate answer may not be exactly the same as the ground truth."
+        "If the ground truth is in the candidate answer, the candidate answer should be right. "
+        "If the candidate answer or ground truth is not A, B, C, D, but they indicate the same option, the candidate answer should be right. "
+        "For example, if candidate answer is (D) 7.5 and ground truth is D, you should response 'correct'. "
         "For non-multiple-choice questions, simply compare the candidate answer with the ground truth"
         "The candidate answer may not be exactly the same as the ground truth. "
         "If they indicate the same thing, the candidate answer should be right."
+        "If the candidate answer contains the ground truth, the candidate answer should be right. "
         # "Follow the <AND> and <OR> logical rules in the ground truth answer."
         f"Input: {question}\n"
         f"Ground truth answer: {ground_truth}\n"

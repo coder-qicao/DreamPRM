@@ -1,5 +1,6 @@
 import json
 from datasets import load_dataset
+import re
 
 class MathVision_utils:
     def __init__(self):
@@ -22,6 +23,7 @@ class MathVision_utils:
 
     def get_question_text(self,problem):
         question = problem['question']
+        question = re.sub(r"<image\d+>", "", question)
         return question
 
 
@@ -49,7 +51,7 @@ class MathVision_utils:
     def build_prompt(self, problems, test_qid):
         print(f"saving data {test_qid}")
         question = self.get_question_text(problems)
-        if problems["options"] != None:
+        if problems["options"] != []:
             choice = self.get_choice_text(problems)
             input = f"Question: {question}\nOptions: {choice}\n"
         else:
