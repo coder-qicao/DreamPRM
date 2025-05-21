@@ -1,6 +1,3 @@
-import sys
-sys.path.append("/home/q9cao/python_project/multimodal_reasoning")
-
 import copy
 import numpy as np
 import torch

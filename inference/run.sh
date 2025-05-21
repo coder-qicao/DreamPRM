@@ -1,3 +1,5 @@
-nohup /home/q9cao/anaconda3/envs/multimodal_reasoning/bin/python \
-      /home/q9cao/python_project/multimodal_reasoning/inference/InternVL_MPO_MathVision.py \
-      > /home/q9cao/python_project/multimodal_reasoning/inference/results/MathVision/InternVL-MPO/myscript.log 2>&1 &
+python inference/InternVL/InternVL_2_5_MPO_8B/InternVL_MPO_MathVista.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
+
+python inference/meta_data_generation.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
+
+python inference/oracle_accuracy.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>

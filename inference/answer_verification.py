@@ -1,8 +1,30 @@
-import os
+# Written by QI CAO on May 21, 2025.
+# All code is original unless otherwise noted.
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-path = "/home/q9cao/python_project/multimodal_reasoning"
-os.chdir(path)
+import sys
+import os
+import argparse
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--path', type=str, required=True, help='Project root path')
+parser.add_argument('--gpu', type=str, default='0', help='GPU device ID (CUDA_VISIBLE_DEVICES)')
+args = parser.parse_args()
+
+# Append project root path to sys.path for module importing
+sys.path.append(args.path)
+
+# Set visible CUDA devices
+os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+
+# Change working directory to the project root
+os.chdir(args.path)
+
+# Optional: Print confirmation
+print(f"CUDA_VISIBLE_DEVICES set to {args.gpu}")
+print(f"Working directory changed to {args.path}")
+
+# main
 
 from utils.json_processor import read_json, write_json
 from utils.verify_answer_by_LLM import judge_vqa_answer

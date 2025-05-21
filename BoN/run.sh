@@ -1,0 +1,1 @@
+python BoN/BoN_verification.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>

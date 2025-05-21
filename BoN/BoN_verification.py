@@ -1,10 +1,30 @@
-import sys
-sys.path.append("/home/q9cao/python_project/multimodal_reasoning")
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-path = "/home/q9cao/python_project/multimodal_reasoning"
-os.chdir(path)
+# Written by QI CAO on May 21, 2025.
+# All code is original unless otherwise noted.
 
+import sys
+import os
+import argparse
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--path', type=str, required=True, help='Project root path')
+parser.add_argument('--gpu', type=str, default='0', help='GPU device ID (CUDA_VISIBLE_DEVICES)')
+args = parser.parse_args()
+
+# Append project root path to sys.path for module importing
+sys.path.append(args.path)
+
+# Set visible CUDA devices
+os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+
+# Change working directory to the project root
+os.chdir(args.path)
+
+# Optional: Print confirmation
+print(f"CUDA_VISIBLE_DEVICES set to {args.gpu}")
+print(f"Working directory changed to {args.path}")
+
+# main
 import torch
 from utils.json_processor import read_json, write_json
 from utils.internVL_utils.load_pretrained_model_and_processor import load_pretrained_model, load_pretrained_tokenizer
@@ -26,10 +46,11 @@ processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct")
 reward_model = load_QwenVL_RM(model_id = "reweighting/weights/base_model",
                       LN_id = "reweighting/weights/LN_weights.pt")
 reward_model.eval()
-N_json = [f"inference/results/{dataset}/InternVL-MPO/0.json", f"inference/results/{dataset}/InternVL-MPO/1.json",
-          f"inference/results/{dataset}/InternVL-MPO/2.json", f"inference/results/{dataset}/InternVL-MPO/3.json",
-          f"inference/results/{dataset}/InternVL-MPO/4.json", f"inference/results/{dataset}/InternVL-MPO/5.json",
-          f"inference/results/{dataset}/InternVL-MPO/6.json", f"inference/results/{dataset}/InternVL-MPO/7.json",]
+model_name = "InternVL-MPO"
+N_json = [f"inference/results/{dataset}/{model_name}/0.json", f"inference/results/{dataset}/{model_name}/1.json",
+          f"inference/results/{dataset}/{model_name}/2.json", f"inference/results/{dataset}/{model_name}/3.json",
+          f"inference/results/{dataset}/{model_name}/4.json", f"inference/results/{dataset}/{model_name}/5.json",
+          f"inference/results/{dataset}/{model_name}/6.json", f"inference/results/{dataset}/{model_name}/7.json",]
 N = []
 gpt_eval_json = {}
 
@@ -44,10 +65,21 @@ for data in dataset_json:
     # example data:
     # {
     #     "id": 0,
-    #     "input": "Question: Which figure of speech is used in this text?\nSing, O goddess, the anger of Achilles son of Peleus, that brought countless ills upon the Achaeans.\n\u2014Homer, The Iliad\nContext: N/A\nOptions: (A) chiasmus (B) apostrophe\n",
+    #     "input": "Question: Which figure of speech is used in this text?\nSing, O goddess, the anger of Achilles son
+    #     of Peleus, that brought countless ills upon the Achaeans.\n\u2014Homer, The Iliad\nContext: N/A
+    #     \nOptions: (A) chiasmus (B) apostrophe\n",
     #     "ground_truth": "B",
-    #     # "reasoning": "Because Figures of speech are words or phrases that use language in a nonliteral or unusual way. They can make writing more expressive.\\nAnaphora is the repetition of the same word or words at the beginning of several phrases or clauses.\\nWe are united. We are powerful. We are winners.\\nAntithesis involves contrasting opposing ideas within a parallel grammatical structure.\\nI want to help, not to hurt.\\nApostrophe is a direct address to an absent person or a nonhuman entity.\\nOh, little bird, what makes you sing so beautifully?\\nAssonance is the repetition of a vowel sound in a series of nearby words.\\nTry to light the fire.\\nChiasmus is an expression in which the second half parallels the first but reverses the order of words.\\nNever let a fool kiss you or a kiss fool you.\\nUnderstatement involves deliberately representing something as less serious or important than it really is.\\nAs you know, it can get a little cold in the Antarctic. The text uses apostrophe, a direct address to an absent person or a nonhuman entity.\\nO goddess is a direct address to a goddess, a nonhuman entity."
-    #     # "hint", "question type"
+    #     "response": "Because Figures of speech are words or phrases that use language in a nonliteral or unusual way.
+    #     They can make writing more expressive.\\nAnaphora is the repetition of the same word or words at the beginning
+    #     of several phrases or clauses.\\nWe are united. We are powerful. We are winners.\\nAntithesis involves
+    #     contrasting opposing ideas within a parallel grammatical structure.\\nI want to help, not to hurt.
+    #     \\nApostrophe is a direct address to an absent person or a nonhuman entity. \\nOh, little bird, what makes you
+    #     sing so beautifully?\\nAssonance is the repetition of a vowel sound in a series of nearby words.
+    #     \\nTry to light the fire.\\nChiasmus is an expression in which the second half parallels the first but
+    #     reverses the order of words.\\nNever let a fool kiss you or a kiss fool you.\\nUnderstatement involves
+    #     deliberately representing something as less serious or important than it really is.\\nAs you know, it can get
+    #     a little cold in the Antarctic. The text uses apostrophe, a direct address to an absent person or a nonhuman
+    #     entity.\\nO goddess is a direct address to a goddess, a nonhuman entity."
     # }
     flag = True
     best_answer = ''
@@ -81,10 +113,8 @@ for data in dataset_json:
                 with torch.no_grad():
                     score = reward_model(input_ids=input_ids, attention_mask=attention_mask, pixel_values=pixel_values,
                                         image_grid_thw=image_grid_thw)
-                    mean_score += score
+                    mean_score += np.log(score / (1 - score))
                     scores.append(round(float(score),3))
-                # if score < min_score:
-                #     min_score = score
             index += 1
         if i[total_num]['true_false']:
             true_N += 1
@@ -96,16 +126,16 @@ for data in dataset_json:
             max_score = mean_score
 
     total_num += 1
-    # true_false = verify_answer(best_answer, data['ground_truth'], data['type'])
+    # true_false = verify_answer(best_answer, data['ground_truth'], data['type']) # for MMVet
     if true_false:
         true_num += 1
     print(f"{data['id']}:{true_false}, True N:{true_N}, total:{true_num}")
     responses.add_response(best_answer, data['input'], data['id'], true_false)
-    # gpt_eval_json[data['vid']] = best_answer.split("Final answer: ")[-1]
+    # gpt_eval_json[data['vid']] = best_answer.split("Final answer: ")[-1]  # for MMVet
     if data['id'] % 100 == 0:
         write_json(responses.get_out_path(), responses.get_responses())
 
 print(f"Accuracy {true_num/(total_num+1) * 100:.2f}%")
 write_json(responses.get_out_path(), responses.get_responses())
 write_json(f"BoN/results/{dataset}_internVL_sequence.json",sequence_class)
-# write_json(f"BoN/results/{dataset}_internVL_gpt_eval.json", gpt_eval_json)
+# write_json(f"BoN/results/{dataset}_internVL_gpt_eval.json", gpt_eval_json)  # for MMVet
