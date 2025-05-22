@@ -28,7 +28,7 @@ print(f"Working directory changed to {args.path}")
 from utils.json_processor import read_json, write_json
 from utils.split_step import split_step
 
-InternVL_MPO_json = "inference/results/MMPR/InternVL-MPO/10.json"
+InternVL_MPO_json = "inference/results/MMPR/InternVL-MPO/0.json"
 InternVL_MPO_data = read_json(InternVL_MPO_json)
 dataset_json = "dataset/MMPR/train.json"
 dataset = read_json(dataset_json)
