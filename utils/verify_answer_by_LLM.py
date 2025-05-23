@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-利用开源小型 LLM 模型判定 VQA 任务的答案是否正确
-注意：请先安装 transformers 库，例如：pip install transformers torch
-"""
-
 def judge_vqa_answer(question, ground_truth, candidate_answer, model, tokenizer):
     """
     利用指定的开源小LLM模型，根据题目、标准答案和待判定答案生成判断结果。
