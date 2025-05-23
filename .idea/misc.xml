@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="Black">
-    <option name="sdkName" value="Remote Python 3.12.4 (sftp://qi@ecepxiegpu2.ucsd.edu:22/home/qi/anaconda3/bin/python)" />
-  </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.10.15 (sftp://q9cao@ecepxiegpu3.ucsd.edu:22/home/q9cao/anaconda3/envs/multimodal_reasoning/bin/python)" project-jdk-type="Python SDK" />
-</project>
