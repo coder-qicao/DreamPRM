@@ -16,7 +16,6 @@
 | **Domain-Reweighted Fine-Tuning** | Re-weights K training domains via parameters αₖ | Gives harder, higher-quality datasets greater gradient influence |
 | **Bi-Level Optimisation (BLO)** | Lower level updates PRM weights ϕ; upper level updates α | Learns *both* model and data weights in one run |
 | **Aggregation Function Loss** | Meta-level loss that mirrors inference-time scoring | Aligns training with real PRM usage |
-| **Structural Thinking Prompt** | 5-step CoT template (Restate → Evidence → Context → Reason → Conclude) | Produces interpretable, stable reasoning traces |
 
 <!-- TODO: swap in your domain-weight visualisation -->
 ![Learned domain weights](figs/6-4.png)
