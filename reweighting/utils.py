@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/q9cao/python_project/multimodal_reasoning")
 from reweighting.model import QwenVL_RM
 import random
 import numpy as np

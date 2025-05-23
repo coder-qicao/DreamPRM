@@ -1,4 +1,3 @@
-# Written by QI CAO on May 21, 2025.
 # All code is original unless otherwise noted.
 
 import sys
