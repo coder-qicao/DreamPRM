@@ -48,7 +48,7 @@ for i in range(8):
         if not os.path.isfile(image_path):
             continue
         prompt= one_shot_prompt_building_single_image(input)
-        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=0.3)
+        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=1.0)
         print(response)
         true_false = verify_answer(response, data['ground_truth'], None)
         print(f"{data['id']}:{true_false}")

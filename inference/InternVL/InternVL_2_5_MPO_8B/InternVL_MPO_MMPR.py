@@ -33,21 +33,21 @@ from utils.internVL_utils.generate_response import generate_response
 from utils.verify_answer import verify_answer
 
 dataset = 'MMPR'
-part = 'train_2'
+part = 'train'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 dataset_json_file_path = f"dataset/{dataset}/{part}.json"
 dataset_json = read_json(dataset_json_file_path)
 model = load_pretrained_model_MPO()
 tokenizer = load_pretrained_tokenizer_MPO()
 
-responses = ResponseCollector(out_path=f"inference/results/MMPR/InternVL-MPO/10.json")
+responses = ResponseCollector(out_path=f"inference/results/MMPR/InternVL-MPO/0.json")
 for data in dataset_json:
     input = data['input']
     image_path = data['image_path']
     if not os.path.isfile(image_path):
         continue
     prompt= one_shot_prompt_building_single_image(input)
-    response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=0.3)
+    response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=1.0)
     print(response)
     true_false = verify_answer(response, data['ground_truth'], '')
     print(f"{data['id']}:{true_false}")

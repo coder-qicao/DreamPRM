@@ -65,7 +65,6 @@ for i in format_rule_candidate:
                      'times': 1,
                      'accuracy': score})
 print(len(tree))
-print(tree[1000])
 
-write_json("MC/results/MMPR/Tree/1.json", tree)
+write_json("MC/results/MMPR/Tree/0.json", tree)
 

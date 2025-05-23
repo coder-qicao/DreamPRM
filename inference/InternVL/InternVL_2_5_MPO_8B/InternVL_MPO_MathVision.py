@@ -40,7 +40,7 @@ dataset_json = read_json(dataset_json_file_path)
 model = load_pretrained_model_MPO()
 tokenizer = load_pretrained_tokenizer_MPO()
 
-for i in range(8, 16):
+for i in range(8):
     responses = ResponseCollector(out_path=f"inference/results/MathVision/InternVL-MPO/{i}.json")
     for data in dataset_json:
         input = data['input']

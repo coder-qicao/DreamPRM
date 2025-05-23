@@ -40,7 +40,7 @@ dataset_json = read_json(dataset_json_file_path)
 model = load_pretrained_model_MPO()
 tokenizer = load_pretrained_tokenizer_MPO()
 
-for i in range(8, 16):
+for i in range(8):
     responses = ResponseCollector(out_path=f"inference/results/MathVista/InternVL-MPO/{i}.json")
     for data in dataset_json:
         input = data['input']
@@ -48,7 +48,7 @@ for i in range(8, 16):
         if not os.path.isfile(image_path):
             continue
         prompt= one_shot_prompt_building_single_image(input, hint=data['hint'])
-        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=0.7)
+        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=1.0)
         print(response)
         true_false = verify_answer(response, data['ground_truth'], data['type'])
         print(f"{data['id']}:{true_false}")

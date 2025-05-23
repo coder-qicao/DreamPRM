@@ -64,7 +64,7 @@ for data in dataset_json:
         flag = True
         sid = data['sid']
         prompt = one_shot_prompt_building_single_image_completion(input, add="\n\n" + add)
-        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=0.6)
+        response = generate_response(tokenizer, model, prompt, image_path, do_sample=True, temperature=1.0)
         if len(response) > 30 or sid == 5:
             # print(response)
             # print(ground_truth)

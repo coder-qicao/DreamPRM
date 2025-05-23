@@ -39,7 +39,7 @@ model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 dataset_path = f"dataset/{dataset}/test.json"
 d = read_json(dataset_path)
-for j in range(1):
+for j in range(8):
     file_path = f"inference/results/{dataset}/InternVL-MPO/{j}.json"
     data = read_json(file_path)
 
