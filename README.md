@@ -4,7 +4,6 @@
 2. [Quick Start](#quick-start)
 3. [Customize Your Datasets](#customize-your-own-datasets)
 4. [Citation](#citation)
-5. [License](#license)
 
 ## Method Overview <a name="installation"></a>
 
@@ -104,6 +103,7 @@ Each sample in the meta dataset should follow this format:
 ```
 
 ## Citation <a name="citation"></a>
+If you use this work in your research, please cite:
 ```bibtex
 @misc{cao2025dreamprmdomainreweightedprocessreward,
       title={DreamPRM: Domain-Reweighted Process Reward Model for Multimodal Reasoning}, 
@@ -114,26 +114,4 @@ Each sample in the meta dataset should follow this format:
       primaryClass={cs.LG},
       url={https://arxiv.org/abs/2505.20241}, 
 }
-```
-## License
-```text
-Copyright (c) 2025 Qi Cao
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 ```
