@@ -3,7 +3,7 @@ This repository holds the code and data of [DreamPRM: Domain-Reweighted Process 
 
 * Update on Jun 1, 2025: release codes and paper
 > **DreamPRM — Domain-Reweighted Process Reward Model for Multimodal Reasoning**  
-> DreamPRM tackles the dataset *quality imbalance* and *distribution shift* that plague multimodal reasoning by *domain-reweighing*.  
+> DreamPRM tackles the dataset *quality imbalance* and *distribution shift* that plague multimodal reasoning by *domain-reweighting*.  
 > It jointly learns (i) a high-fidelity Process Reward Model (PRM) and (ii) optimal domain weights through a bi-level optimisation (BLO) loop, delivering a consistent **+4 pp** average gain on five public benchmarks. 
 
 ## Table of Contents
