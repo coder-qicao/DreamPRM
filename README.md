@@ -11,7 +11,9 @@ This repository holds the code and data of [DreamPRM: Domain-Reweighted Process 
 2. [Method Overview](#installation)
 3. [Quick Start](#quick-start)
 4. [Customize Your Datasets](#customize-your-own-datasets)
-5. [Citation](#citation)
+5. [Acknowledgement](#acknowledgement)
+6. [License](#license)
+7. [Citation](#citation)
 
 ## Example <a name="example"></a>
 
@@ -202,6 +204,20 @@ Each sample in the meta dataset should follow this format:
     "image_path": "xxx.png"         # Input image path (required)
 }
 ```
+
+---
+
+## Acknowledgement <a name="acknowledgement"></a>
+
++ [InternVL](https://github.com/OpenGVLab/InternVL)
++ [Qwen2-VL](https://github.com/QwenLM/Qwen2.5-VL)
++ [MathVista](https://mathvista.github.io/) 
++ [M3CoT](https://github.com/LightChen233/M3CoT)
++ [Betty](https://github.com/leopard-ai/betty)
+
+## License <a name="license"></a>
+This repository is under [Apache License 2.0](LICENSE.md).
+
 
 ## Citation <a name="citation"></a>
 If you use this work in your research, please cite:
