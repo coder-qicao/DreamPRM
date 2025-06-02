@@ -86,7 +86,7 @@ Please download Qwen2-VL weights from [https://huggingface.co/Qwen/Qwen2-VL-2B-I
 
 Domain-reweighting for DreamPRM fine-tuning:
 ```bash
-python reweighting/main.py \\
+python main.py \\
   --train_json_file "data/train.json" \\
   --meta_json_file "data/meta.json" \\
   --weights_path "weights"\\
@@ -140,7 +140,7 @@ In addition, you may want to change the number of epochs and other hyper-paramet
 ### Example Usage
 
 ```bash
-python train.py \\
+python main.py \\
   --train_json_file data/train.json \\
   --meta_json_file data/meta.json \\
   --weights_path models/dreamprm \\
