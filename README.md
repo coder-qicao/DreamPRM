@@ -1,4 +1,12 @@
-## Method Overview
+# DreamPRM: Domain-Reweighted Process Reward Model for Multimodal Reasoning
+## Table of Contents
+1. [Method Overview](#installation)
+2. [Quick Start](#quick-start)
+3. [Customize Your Datasets](#customize-your-own-datasets)
+4. [Citation](#citation)
+5. [License](#license)
+
+## Method Overview <a name="installation"></a>
 
 > **DreamPRM — Domain-Reweighted Process Reward Model for Multimodal Reasoning**  
 > DreamPRM tackles the dataset *quality imbalance* and *distribution shift* that plague multimodal reasoning.  
@@ -24,11 +32,11 @@ DreamPRM’s learned domain weights span **0.55–1.49**, down-weighting noisy s
 
 ---
 
-## Code Usage
+## Quick Start <a name="quick-start"></a>
 
 > *All commands below are illustrative—rename scripts / paths to match your repo.*
 
-### 1  Environment
+### 1.  Environment
 
 ```bash
 # (a) create conda env
@@ -38,42 +46,94 @@ conda activate dreamprm
 # (b) install requirements
 pip install -r requirements.txt   # torch betty, transformers, accelerate, ...
 ```
-### 2  Domain-reweighting
-Data preparation key steps:
-```bash
-# (a) Prepare data for Monte Carlo estimation
-python inference/InternVL/InternVL_2_5_MPO_8B/InternVL_MPO_MMPR.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)> 
-python MC/Tree_generation.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
-
-# (b) Monte Carlo estimation
-python MC/MC_inference_InternVL_MPO.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
-
-# (c) Domain-reweighting dataset generation
-python MC/train_data_generation.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
-python inference/meta_data_generation.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
-```
-
+### 2.  Domain-reweighting
 Domain reweighting for PRM fine-tuning:
 ```bash
-python reweighting/main.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
+python reweighting/main.py --train_json_file "data/train.json" --meta_json_file "data/meta.json" --weights_path "weights"
 ```
-### 3  Other tools
-Dataset download:
+## Customized Your Datasets <a name="customize-your-own-datasets"></a>
+We provide demo datasets with 10 domains (10k training samples) and 500 meta samples in our repository:
 ```bash
- dataset/
- ├── M3CoT
- ├── ...
- └── WeMath
+data/
+├── meta.json
+└── train.json
 ```
-Inferencing:
-```bash
- inference/InternVL/InternVL_2_5_MPO_8B/
- ├── InternVL_MPO_M3CoT.py
- ├── ...
- └── InternVL_MPO_WeMath.py
+### Training Dataset Format (for lower-level optimization)
+Each sample in the training dataset should follow this format:
+```python
+{
+    "id": 1128,                   # Unique question identifier
+    "sid": 1,                     # Step number identifier
+    "input": "Your task is...",    # Full question prompt
+    "add": "Step 1: Restate...",   # Model's partial response
+    "ground_truth": "1.78947",     # Correct final answer
+    "image_path": "dataset/...",   # Path to input image
+    "dataset": "chartqa",          # Domain name
+    "score": 7,                    # Monte Carlo score
+    "times": 11,                   # Monte Carlo iterations
+    "accuracy": 0.6363             # Estimated accuracy (0-1)
+}
 ```
-BoN verification using DreamPRM
-```bash
-python BoN/BoN_verification.py --path <Project root path> --gpu <GPU device ID (CUDA_VISIBLE_DEVICES)>
+### Minimal Custom Training Sample Format:
+```python
+{
+    "input": "...",                # Question prompt (required)
+    "add": "Step 1: ...",          # Model's partial response (required)
+    "image_path": "xxx.png",       # Input image path (required)
+    "dataset": "...",              # Domain name (required)
+    "accuracy": 0.6363             # Estimated accuracy (0-1, required)
+}
+```
+### Meta Dataset Format (for upper-level optimization)
+Each sample in the meta dataset should follow this format:
+```python
+{
+    "id": 2,                       # Unique question identifier
+    "true_false": True,             # Ground truth label
+    "input": "Question: The...",    # Full question + model response
+    "image_path": "dataset/..."     # Path to input image
+}
+```
+### Minimal Custom Meta Sample Format:
+```python
+{
+    "true_false": True,             # Boolean ground truth (required)
+    "input": "Question: ...",       # Full question + model response (required)
+    "image_path": "xxx.png"         # Input image path (required)
+}
 ```
 
+## Citation <a name="citation"></a>
+```bibtex
+@misc{cao2025dreamprmdomainreweightedprocessreward,
+      title={DreamPRM: Domain-Reweighted Process Reward Model for Multimodal Reasoning}, 
+      author={Qi Cao and Ruiyi Wang and Ruiyi Zhang and Sai Ashish Somayajula and Pengtao Xie},
+      year={2025},
+      eprint={2505.20241},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2505.20241}, 
+}
+```
+## License
+```text
+Copyright (c) 2025 Qi Cao
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
