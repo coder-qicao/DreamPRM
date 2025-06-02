@@ -1,20 +1,44 @@
 # DreamPRM: Domain-Reweighted Process Reward Model for Multimodal Reasoning
-## Table of Contents
-1. [Method Overview](#installation)
-2. [Quick Start](#quick-start)
-3. [Customize Your Datasets](#customize-your-own-datasets)
-4. [Citation](#citation)
+This repository holds the code and data of [DreamPRM: Domain-Reweighted Process Reward Model for Multimodal Reasoning](https://arxiv.org/abs/2505.20241).
 
-## Method Overview <a name="installation"></a>
-
+* Update on Jun 1, 2025: release codes and paper
 > **DreamPRM — Domain-Reweighted Process Reward Model for Multimodal Reasoning**  
-> DreamPRM tackles the dataset *quality imbalance* and *distribution shift* that plague multimodal reasoning.  
+> DreamPRM tackles the dataset *quality imbalance* and *distribution shift* that plague multimodal reasoning by *domain-reweighing*.  
 > It jointly learns (i) a high-fidelity Process Reward Model (PRM) and (ii) optimal domain weights through a bi-level optimisation (BLO) loop, delivering a consistent **+4 pp** average gain on five public benchmarks. 
 
-<!-- TODO: swap in your high-level diagram -->
+## Table of Contents
+1. [Example](#example)
+2. [Method Overview](#installation)
+3. [Quick Start](#quick-start)
+4. [Customize Your Datasets](#customize-your-own-datasets)
+5. [Citation](#citation)
+
+## Example <a name="example"></a>
+
+![example](figs/1.png)
+ DreamPRM improves multimodal reasoning by mitigating the dataset quality imbalance problem. 
+ **Left**: On five benchmarks, DreamPRM outperforms base model (InternVL-2.5-8B-MPO) by an average of +4.0%. DreamPRM also consistently surpasses Vanilla PRM trained
+without data selection. 
+ **Right**: Easy AI2D questions (weight 0.55) vs. hard M3COT questions (weight 1.49) shows how DreamPRM prioritizes data that demand deeper reasoning - samples
+requiring knowledge from both textual and visual modalities for step-by-step logical deduction.
+
+## Method Overview <a name="installation"></a>
+### Method flowchart
+<!-- Method -->
 ![Training PRM and PRM for inference](figs/3.png)
+ General flow of training PRM and using PRM for inference. 
+ **Training phase**: Train PRM with Monte Carlo signals from intermediate steps of Chain-of-Thoughts (CoTs). 
+ **Inference phase**: Use the trained PRM to verify CoTs step by step and select the best CoT. Conventional
+training of PRM has poor generalization capability due to distribution shift between training set and
+testing set.
+
 ![DreamPRM Overview](figs/5.png)
 
+The proposed bi-level optimization based domain-reweighting method. 
+**Lower-level optimization**: In this stage, PRM’s parameters are updated on multiple datasets with domain weights,
+allowing the PRM to prioritize domains with better quality. 
+**Upper-level optimization**: In this stage, the PRM is evaluated on a separate meta dataset to compute an aggregation function loss and optimize
+the domain weights. 
 
 ### Key Components
 
@@ -24,6 +48,7 @@
 | **Bi-Level Optimisation (BLO)** | Lower level updates PRM weights ϕ; upper level updates α | Learns *both* model and data weights in one run |
 | **Aggregation Function Loss** | Meta-level loss that mirrors inference-time scoring | Aligns training with real PRM usage |
 
+### Domain weights results
 <!-- TODO: swap in your domain-weight visualisation -->
 ![Learned domain weights](figs/6-4.png)
 
@@ -34,8 +59,15 @@ DreamPRM’s learned domain weights span **0.55–1.49**, down-weighting noisy s
 ## Quick Start <a name="quick-start"></a>
 
 > *All commands below are illustrative—rename scripts / paths to match your repo.*
+### 1. Codes
+Git clone our repository, creating a python environment and ativate it via the following command
 
-### 1.  Environment
+```bash
+git https://github.com/coder-qicao/DreamPRM.git
+cd DreamPRM
+```
+
+### 2. Environment
 
 ```bash
 # (a) create conda env
@@ -45,11 +77,80 @@ conda activate dreamprm
 # (b) install requirements
 pip install -r requirements.txt   # torch betty, transformers, accelerate, ...
 ```
-### 2.  Domain-reweighting
-Domain reweighting for PRM fine-tuning:
+Verify the installation of `torch` and `torchvision` is successful by running `python -c "import torchvision; print(torchvision.__version__)"`. If it outputs the version number without any warnings or errors, then you are good to go. __If it outputs any warnings or errors__, try to uninstall `torch` by `conda uninstall pytorch torchvision torchaudio cudatoolkit` and then reinstall them following [here](https://pytorch.org/get-started/previous-versions/#v1121). You need to find the correct command according to the CUDA version your GPU driver supports (check `nvidia-smi`). 
+### 3. Domain-reweighting
+The current version of DreamPRM is built on Qwen2-VL-2B-Instruct.
+Please download Qwen2-VL weights from [https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct](https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct).
+
+Domain-reweighting for DreamPRM fine-tuning:
 ```bash
-python reweighting/main.py --train_json_file "data/train.json" --meta_json_file "data/meta.json" --weights_path "weights"
+python reweighting/main.py \\
+  --train_json_file "data/train.json" \\
+  --meta_json_file "data/meta.json" \\
+  --weights_path "weights"\\
 ```
+**You need at least 80 GB GPU memory for the training.** 
+
+### 4. Configuration Parameters
+In addition, you may want to change the number of epochs and other hyper-parameters there, such as `iteration_num`, `unroll_steps`, `gradiant_accumulation`,`lr`, `scheduler_step_size`, etc.
+
+### Data & Model Paths
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--train_json_file` | str | *None* | Path to training dataset JSON file |
+| `--meta_json_file` | str | *None* | Path to meta dataset JSON file |
+| `--weights_path` | str | *None* | Directory to save/load model weights |
+| `--reward_model` | str | "Qwen/Qwen2-VL-2B-Instruct" | Pretrained reward model identifier |
+
+### Training Setup
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--iteration_num` | int | 10000 | Total training iterations |
+| `--batch_size` | int | 1 | Training batch size |
+| `--max_epoch` | int | 120 | Maximum training epochs |
+| `--device` | str | "cuda" | Compute device ("cuda" or "cpu") |
+| `--precision` | str | "bf16" | Floating point precision (bf16/fp16/fp32) |
+| `--strategy` | str | "default" | Training strategy (default) |
+| `--seed` | int | 1 | Random seed for reproducibility |
+| `--local_rank` | int | 0 | Local rank for distributed training |
+
+### Optimization Parameters
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--lr` | float | 5e-7 | Main optimizer learning rate |
+| `--meta_lr` | float | 0.01 | Meta-optimizer learning rate |
+| `--weight_decay` | float | 1e-3 | Weight decay (L2 penalty) |
+| `--meta_weight_decay` | float | 0.0 | Meta-optimizer weight decay |
+| `--scheduler_step_size` | int | 5000 | Steps between LR adjustments |
+| `--scheduler_gamma` | float | 0.5 | LR decay multiplier |
+
+### Advanced Training
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--unroll_steps` | int | 5 | Unrolled optimization steps |
+| `--gradiant_accumulation` | int | 1 | Gradient accumulation steps |
+
+### Checkpoint & Visualization
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--save_every_iterations` | int | 1000 | Checkpoint save interval |
+
+### Example Usage
+
+```bash
+python train.py \\
+  --train_json_file data/train.json \\
+  --meta_json_file data/meta.json \\
+  --weights_path models/dreamprm \\
+  --iteration_num 20000 \\
+  --lr 1e-6 \\
+  --meta_lr 0.05 \\
+  --precision bf16 \\
+  --reward_model "Qwen/Qwen2-VL-7B-Instruct" \\
+  --unroll_steps 8 \\
+  --save_every_iterations 500
+```
+
 ## Customized Your Datasets <a name="customize-your-own-datasets"></a>
 We provide demo datasets with 10 domains (10k training samples) and 500 meta samples in our repository:
 ```bash
