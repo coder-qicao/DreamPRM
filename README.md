@@ -27,6 +27,11 @@ without data selection.
  **Right**: Easy AI2D questions (weight 0.55) vs. hard M3COT questions (weight 1.49) shows how DreamPRM prioritizes data that demand deeper reasoning - samples
 requiring knowledge from both textual and visual modalities for step-by-step logical deduction.
 
+![Learned domain weights](figs/7.png)
+
+DreamPRM significantly outperforms o4-mini in pass@1 accuracy (with temperature fixed at 1.0, following OpenAI API defaults), achieving a **4.6%** absolute improvement. It also surpasses the widely used **self-consistency** (Consensus) method based on majority voting for reasoning chain selection.
+
+
 ## Method Overview <a name="installation"></a>
 ### Method flowchart
 <!-- Method -->
@@ -211,11 +216,6 @@ Each sample in the meta dataset should follow this format:
 ## Extend DreamPRM to o4-mini <a name="o4-mini"></a> 
 
 DreamPRM can be extended to stronger models by leveraging your customized meta training set. In this section, we demonstrate how to apply DreamPRM to **o4-mini**.
-
-![Learned domain weights](figs/7.png)
-
-DreamPRM significantly outperforms o4-mini in pass@1 accuracy (with temperature fixed at 1.0, following OpenAI API defaults), achieving a **4.6%** absolute improvement. It also surpasses the widely used **self-consistency** (Consensus) method based on majority voting for reasoning chain selection.
-
 ### Prepare o4-mini CoTs
 
 Generate multiple **Chains of Thought (CoTs)** using o4-mini. We highly recommend enabling **high reasoning effort mode** to produce richer and more reliable reasoning paths.
