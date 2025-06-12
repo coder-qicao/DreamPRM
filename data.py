@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from qwen_vl_utils import process_vision_info
 import json
-from transformers import AutoProcessor
+from transformers import AutoProcessor, AutoTokenizer
 from PIL import Image
 import re
 
