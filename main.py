@@ -1,4 +1,16 @@
 # All code is original unless otherwise noted.
+'''
+python3 main.py \
+    --model_type qwenmath \
+    --reward_model "Qwen/Qwen2.5-Math-7B-Instruct" \
+    --train_json_file "math_train.json" \
+    --meta_json_file "math_meta.json" \
+    --weights_path "./trained_weights" \
+    --batch_size 8 \
+    --lr 5e-7 \
+    --meta_lr 0.01 \
+    --iteration_num 10000
+'''
 
 import argparse
 import torch.optim as optim

@@ -638,3 +638,17 @@ def process_domain_for_qwen(domain_name, raw_data, processor):
             })
     
     return processed
+
+
+if __name__ == "__main__":
+    # Process PoT data
+    processor = QwenMathDataProcessor()
+    pot_data = processor.process_openmathinstruct_for_qwen(input_data=read_json('openmathinstruct.json'), max_examples=10000)
+
+    # Convert to training format
+    training_data = processor.convert_to_training_format(pot_data)
+    meta_data = processor.convert_to_meta_format(pot_data)
+
+    # Save as JSON
+    with open('math_train.json', 'w') as f:
+        json.dump(training_data, f)
