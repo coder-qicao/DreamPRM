@@ -46,27 +46,61 @@ parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--max_epoch", type=int, default=120)
 parser.add_argument("--meta_interval", type=int, default=1)
 parser.add_argument("--paint_interval", type=int, default=20)
+# New argument for model type
+parser.add_argument("--model_type", type=str, default="qwenvl", choices=["qwenvl", "llava", "qwenmath"], 
+                   help="Type of model to use: qwenvl, llava, or qwenmath")
 
 args = parser.parse_args()
 print(args)
 set_seed(args.seed)
-domain_list = create_dataset_mapping(args.train_json_file)
+
+# Handle domain list creation based on model type
+if args.model_type == "qwenmath":
+    # Use Math_DomainTable for QwenMath
+    domain_list = {
+        "gsm8k": 0,
+        "math": 1,
+        "aime_train": 2,
+        "imo": 3,
+        "mathqa": 4,
+        "theorem_qa": 5,
+        "openmathinstruct_pot": 6,
+        "qwen_math_synthetic": 7
+    }
+else:
+    # Use existing domain creation for vision models
+    domain_list = create_dataset_mapping(args.train_json_file)
+
 print(domain_list)
 
 sampler = None
 resume_idxes = None
 resume_labels = None
 
-(
-    train_dataloader,
-    meta_dataloader,
-) = build_dataloader(
-    processor_path = args.reward_model,
-    train_json_file = args.train_json_file,
-    meta_json_file = args.meta_json_file,
-    train_batch_size= args.batch_size,
-    meta_batch_size= args.batch_size,
-)
+# Build appropriate dataloader based on model type
+if args.model_type == "qwenmath":
+    (
+        train_dataloader,
+        meta_dataloader,
+    ) = build_qwen_math_dataloader(
+        tokenizer_path=args.reward_model,
+        train_json_file=args.train_json_file,
+        meta_json_file=args.meta_json_file,
+        train_batch_size=args.batch_size,
+        meta_batch_size=args.batch_size,
+    )
+else:
+    (
+        train_dataloader,
+        meta_dataloader,
+    ) = build_dataloader(
+        processor_path=args.reward_model,
+        train_json_file=args.train_json_file,
+        meta_json_file=args.meta_json_file,
+        train_batch_size=args.batch_size,
+        meta_batch_size=args.batch_size,
+    )
+
 wandb.init(project="DreamPRM")
 
 device = torch.device(args.device)
@@ -84,18 +118,30 @@ class Upper(ImplicitProblem):
         return self.module(domain_strings, x)
 
     def training_step(self, batch):
-        # steps = [batch['1'], batch['2'], batch['3'], batch['4'], batch['5'],]
+        # Handle different input formats based on model type
         numeric_keys = [k for k in batch.keys() if k.isdigit()]
         sorted_keys = sorted(numeric_keys, key=lambda x: int(x))
         steps = [batch[key] for key in sorted_keys]
         labels = batch['labels'].to(device)
         mean_score = 0
+        
         for i in steps:
-            score = self.inner(i['input_ids'].to(device),
-                                     i['attention_mask'].to(device),
-                                     i['pixel_values'].to(device),
-                                     i['image_grid_thw'].to(device))
+            if args.model_type == "qwenmath":
+                # QwenMath: text-only inputs
+                score = self.inner(
+                    i['input_ids'].to(device),
+                    i['attention_mask'].to(device)
+                )
+            else:
+                # QwenVL/LLaVA: vision + text inputs (original code)
+                score = self.inner(
+                    i['input_ids'].to(device),
+                    i['attention_mask'].to(device),
+                    i['pixel_values'].to(device),
+                    i['image_grid_thw'].to(device) if 'image_grid_thw' in i else i['image_sizes'].to(device)
+                )
             mean_score += torch.log(score / (1 - score))
+            
         outputs = torch.sigmoid(mean_score / len(steps))
         loss = criterion_meta(outputs, labels)
         outer_loss.append(loss.item())
@@ -112,9 +158,12 @@ class Upper(ImplicitProblem):
         return meta_dataloader
 
     def configure_module(self):
-        meta_net = DomainTable(
-            domain_list
-        )
+        if args.model_type == "qwenmath":
+            # Use Math_DomainTable for QwenMath
+            meta_net = Math_DomainTable()
+        else:
+            # Use original DomainTable for vision models
+            meta_net = DomainTable(domain_list)
         return meta_net
 
     def configure_optimizer(self):
@@ -127,25 +176,58 @@ class Upper(ImplicitProblem):
 
 
 class Lower(ImplicitProblem):
-    def forward(self, input_ids, attention_mask, pixel_values, image_grid_thw):
+    def forward(self, input_ids, attention_mask, pixel_values=None, image_grid_thw=None, image_sizes=None):
         # torch.cuda.empty_cache()
-        return self.module(input_ids, attention_mask, pixel_values, image_grid_thw)
+        if args.model_type == "qwenmath":
+            # QwenMath: text-only forward
+            return self.module(input_ids, attention_mask)
+        else:
+            # Vision models: include image inputs
+            if image_grid_thw is not None:
+                return self.module(input_ids, attention_mask, pixel_values, image_grid_thw)
+            else:
+                return self.module(input_ids, attention_mask, pixel_values, image_sizes)
 
     def training_step(self, batch):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
-        pixel_values = batch['pixel_values'].to(device)
-        image_grid_thw = batch['image_grid_thw'].to(device)
         labels = batch['label'].to(dtype=torch.float).to(device)
         domain_strings = batch['dataset']
-        outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask, pixel_values=pixel_values,
-                     image_grid_thw=image_grid_thw)
+        
+        if args.model_type == "qwenmath":
+            # QwenMath: text-only inputs
+            outputs = self.forward(
+                input_ids=input_ids, 
+                attention_mask=attention_mask
+            )
+        else:
+            # Vision models: include image inputs (original code)
+            pixel_values = batch['pixel_values'].to(device)
+            if 'image_grid_thw' in batch:
+                image_grid_thw = batch['image_grid_thw'].to(device)
+                outputs = self.forward(
+                    input_ids=input_ids, 
+                    attention_mask=attention_mask, 
+                    pixel_values=pixel_values,
+                    image_grid_thw=image_grid_thw
+                )
+            else:
+                image_sizes = batch['image_sizes'].to(device)
+                outputs = self.forward(
+                    input_ids=input_ids, 
+                    attention_mask=attention_mask, 
+                    pixel_values=pixel_values,
+                    image_sizes=image_sizes
+                )
+        
         if args.baseline or args.retrain:
             return criterion(outputs, labels)
+        
         loss = criterion(outputs, labels)
         weighted_loss = self.outer(domain_strings, loss)
         inner_loss.append(loss.item())
         inner_weighted_loss.append(weighted_loss.item())
+        
         if len(inner_loss) == 100:
             mean_inner_loss = np.mean(inner_loss)
             mean_inner_weighted_loss = np.mean(inner_weighted_loss)
@@ -161,7 +243,12 @@ class Lower(ImplicitProblem):
         return train_dataloader
 
     def configure_module(self):
-        return QwenVL_RM(device)
+        if args.model_type == "qwenmath":
+            return QwenMath_RM(device, args.reward_model)
+        elif args.model_type == "llava":
+            return Llava_RM(device)
+        else:  # qwenvl (default)
+            return QwenVL_RM(device)
 
     def configure_optimizer(self):
         optimizer = AdamW(
@@ -172,19 +259,33 @@ class Lower(ImplicitProblem):
 
     def configure_scheduler(self):
         scheduler = optim.lr_scheduler.StepLR(
-            self.optimizer, step_size = args.scheduler_step_size, gamma=args.scheduler_gamma
+            self.optimizer, step_size=args.scheduler_step_size, gamma=args.scheduler_gamma
         )
         return scheduler
-
 
 
 class ReweightingEngine(Engine):
     @torch.no_grad()
     def validation(self):
-        torch.save(
-            self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
-        )
-        self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        if args.model_type == "qwenmath":
+            # Save QwenMath model components
+            torch.save(
+                self.inner.module.reward_head.state_dict(), 
+                f"{args.weights_path}/reward_head_weights.pt"
+            )
+            # Save the base model (LoRA weights if applicable)
+            if hasattr(self.inner.module.base_model, 'save_pretrained'):
+                self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+            # Save tokenizer
+            self.inner.module.tokenizer.save_pretrained(f"{args.weights_path}/tokenizer")
+        else:
+            # Save vision model components (original code)
+            torch.save(
+                self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
+            )
+            self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        
+        # Save domain weights
         torch.save(
             self.outer.state_dict(),
             f"{args.weights_path}/domain_weights.pt",
@@ -196,7 +297,7 @@ upper_config = Config(type="darts", precision=args.precision, retain_graph=True)
 lower_config = Config(type="darts", precision=args.precision, unroll_steps=args.unroll_steps, gradient_accumulation=args.gradiant_accumulation)
 engine_config = EngineConfig(
     train_iters=args.iteration_num,
-    valid_step=args.parser.save_every_iterations,
+    valid_step=args.save_every_iterations,  # Fixed: was args.parser.save_every_iterations
     strategy=args.strategy,
     roll_back=args.rollback,
     logger_type="wandb",
