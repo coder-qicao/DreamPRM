@@ -72,9 +72,9 @@ wandb.init(project="DreamPRM")
 device = torch.device(args.device)
 criterion = nn.MSELoss()
 criterion_meta = nn.MSELoss()
-inner_weighted_loss = []
-inner_loss = []
-outer_loss = []
+lower_weighted_loss = []
+lower_loss = []
+upper_loss = []
 best_loss = 1000
 
 
@@ -98,13 +98,13 @@ class Upper(ImplicitProblem):
             mean_score += torch.log(score / (1 - score))
         outputs = torch.sigmoid(mean_score / len(steps))
         loss = criterion_meta(outputs, labels)
-        outer_loss.append(loss.item())
+        upper_loss.append(loss.item())
         print(outputs.item(), labels.item(), loss.item())
         # torch.cuda.empty_cache()
-        if len(outer_loss) == 10:
-            mean_outer_loss = np.mean(outer_loss)
+        if len(upper_loss) == 10:
+            mean_outer_loss = np.mean(upper_loss)
             wandb.log({"outer_loss": mean_outer_loss})
-            outer_loss.clear()
+            upper_loss.clear()
 
         return {"loss": loss}
 
@@ -143,16 +143,16 @@ class Lower(ImplicitProblem):
         if args.baseline or args.retrain:
             return criterion(outputs, labels)
         loss = criterion(outputs, labels)
-        weighted_loss = self.outer(domain_strings, loss)
-        inner_loss.append(loss.item())
-        inner_weighted_loss.append(weighted_loss.item())
-        if len(inner_loss) == 100:
-            mean_inner_loss = np.mean(inner_loss)
-            mean_inner_weighted_loss = np.mean(inner_weighted_loss)
+        weighted_loss = self.upper(domain_strings, loss)
+        lower_loss.append(loss.item())
+        lower_weighted_loss.append(weighted_loss.item())
+        if len(lower_loss) == 100:
+            mean_inner_loss = np.mean(lower_loss)
+            mean_inner_weighted_loss = np.mean(lower_weighted_loss)
             wandb.log({"inner_loss": mean_inner_loss,
                        "inner_weighted_loss": mean_inner_weighted_loss, })
-            inner_loss.clear()
-            inner_weighted_loss.clear()
+            lower_loss.clear()
+            lower_weighted_loss.clear()
         # torch.cuda.empty_cache()
 
         return weighted_loss
