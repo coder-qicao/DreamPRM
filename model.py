@@ -68,38 +68,6 @@ class Llava_RM(nn.Module):
         value_outputs = self.sigmoid(value_outputs)
         # print(value_outputs)
         return value_outputs.squeeze(dim=1)
-
-
-class QwenMath_RM(nn.Module):
-    """
-    Reward model for Qwen2.5-Math-PRM-7B: assigns a scalar process reward
-    based on token-level logits from the Math PRM model.
-    """
-    def __init__(self, device, model_name="Qwen/Qwen2.5-Math-PRM-7B"):
-        super(QwenMath_RM, self).__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            trust_remote_code=True
-        )
-        self.base_model = AutoModel.from_pretrained(
-            model_name,
-            device_map=device,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True
-        )
-        self.LN = nn.Linear(self.base_model.config.vocab_size, 1)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, input_ids, attention_mask):
-        outputs = self.base_model(
-            input_ids=input_ids,
-            attention_mask=attention_mask
-        )
-        # Take logits of the final token
-        logits = outputs.logits[:, -1, :].to(dtype=torch.float)
-        value_outputs = self.LN(logits)
-        value_outputs = self.sigmoid(value_outputs)
-        return value_outputs.squeeze(dim=1)
     
 
 class DomainTable(nn.Module):
