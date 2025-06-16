@@ -60,7 +60,7 @@ domain_list = create_dataset_mapping(args.train_json_file)
 print("Domains:", domain_list)
 
 # DataLoaders for math PRM
-train_loader, meta_loader = build_qwen_math_dataloader(
+train_loader, meta_loader = build_dataloader(
     tokenizer_path=args.model_name if hasattr(args, 'model_name') else "Qwen/Qwen2.5-Math-PRM-7B",
     train_json_file=args.train_json_file,
     meta_json_file=args.meta_json_file,

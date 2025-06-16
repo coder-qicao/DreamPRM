@@ -1,3 +1,7 @@
+'''
+python3 data.py --input_json data/openmathinstruct-1.json --out_json data/prefixes.json --openmath
+'''
+
 import copy
 import numpy as np
 import torch
@@ -6,10 +10,13 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from qwen_vl_utils import process_vision_info
 import json
-from transformers import AutoProcessor, AutoTokenizer
+from transformers import AutoProcessor
 from PIL import Image
 import re
 
+def read_json(source):
+    with open(source, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 def split_step(s_id, response):
     s = f"Step {s_id}"
@@ -21,7 +28,6 @@ def split_step(s_id, response):
     else:
         assistant = ""
     return assistant
-
 
 def find_max_step(response):
     """
@@ -36,23 +42,41 @@ def find_max_step(response):
     # Find all occurrences of step patterns (case-insensitive)
     # Matches: "Step 1", "STEP 2", "step3", "Step: 4", etc.
     step_numbers = re.findall(r'Step[\s:]*(\d+)', response, re.IGNORECASE)
-
     # Return 0 if no step numbers found
     if not step_numbers:
         return 0
-
     # Convert found numbers from strings to integers
     step_numbers = [int(num) for num in step_numbers]
-
     # Return the maximum step number
     return max(step_numbers)
 
+def split_steps(response):
+    max_step = find_max_step(response)
+    return [split_step(i, response) for i in range(1, max_step+1) if split_step(i, response)]
 
-def read_json(source):
-    with open(source, 'r', encoding='utf-8') as f:
-        json_list = json.load(f)
-    return json_list
+def split_steps_openmath(sol):
+    parts = re.split(r'<llm-code>', sol)[1:]
+    steps = []
+    for part in parts:
+        code, rest = part.split('</llm-code>', 1)
+        steps.append(code.strip())
+        if '<llm-code-output>' in rest:
+            out = rest.split('<llm-code-output>',1)[1].split('</llm-code-output>',1)[0]
+            steps.append(out.strip())
+    return steps
 
+def build_prefix_dataset(src_json, out_json, openmath=False):
+    data = read_json(src_json)
+    prefixes = []
+    for idx, itm in enumerate(data):
+        sol = itm.get('generated_solution', itm.get('solution', ''))
+        gt  = str(itm.get('expected_answer', itm.get('answer', '')))
+        steps = split_steps_openmath(sol) if openmath else split_steps(sol)
+        for k in range(len(steps)):
+            p = "\n".join(steps[:k+1])
+            prefixes.append({'qid':str(idx), 'prefix':p, 'ground_truth':gt})
+    with open(out_json, 'w', encoding='utf-8') as f:
+        json.dump(prefixes, f, ensure_ascii=False, indent=2)
 
 def resize_image_if_needed(img, max_size=512):
     """
@@ -127,7 +151,6 @@ class MyDataset_QwenVL(Dataset):
             'dataset': dset
         }
 
-
 class MyDataset_Llava(Dataset):
     def __init__(self, data_js, processor):
         self.data_js = data_js
@@ -170,39 +193,24 @@ class MyDataset_Llava(Dataset):
             'dataset': dset
         }
 
-
 class MyDataset_QwenMath(Dataset):
-    """Dataset class for QwenMath text-only PoT training examples."""
-    def __init__(self, data_js, tokenizer):
-        self.data_js = data_js
+    def __init__(self, json_file, tokenizer, max_length=512):
+        self.data = read_json(json_file)
         self.tokenizer = tokenizer
+        self.max_length = max_length
 
-    def __len__(self):
-        return len(self.data_js)
+    def __len__(self): return len(self.data)
 
     def __getitem__(self, idx):
-        item = self.data_js[idx]
-        prompt = item.get('prompt', '')
-        solution = item.get('full_solution', '')
-        label = float(item.get('accuracy', item.get('label', 0.0)))
-        domain = item.get('domain', item.get('dataset', 'unknown'))
-
-        inputs = self.tokenizer(
-            prompt,
-            return_tensors='pt',
-            truncation=True,
-            max_length=2048,
-            padding='max_length'
-        )
+        itm = self.data[idx]
+        enc = self.tokenizer(itm['prefix'], truncation=True, padding='max_length', max_length=self.max_length, return_tensors='pt')
         return {
-            'input_ids': inputs['input_ids'].squeeze(),
-            'attention_mask': inputs['attention_mask'].squeeze(),
-            'label': torch.tensor(label, dtype=torch.float),
-            'dataset': domain,
-            'full_solution': solution
-        }
+            'qid':itm['qid'], 
+            'input_ids':enc['input_ids'].squeeze(0), 
+            'attention_mask':enc['attention_mask'].squeeze(0)
+            }
 
-    
+
 class MyMetaDataset_QwenVL(Dataset):
     def __init__(self, data_js, processor):
         self.data_js = data_js
@@ -255,7 +263,6 @@ class MyMetaDataset_QwenVL(Dataset):
         r_dict["labels"] = torch.tensor(label).to(dtype=torch.float)
         return r_dict
 
-
 class MyMetaDataset_Llava(Dataset):
     def __init__(self, data_js, processor, step_num = 5):
         self.data_js = data_js
@@ -296,87 +303,42 @@ class MyMetaDataset_Llava(Dataset):
         r_dict["labels"] = torch.tensor(label).to(dtype=torch.float)
         return r_dict
 
-
 class MyMetaDataset_QwenMath(Dataset):
-    """Meta dataset for QwenMath step evaluation PoT examples."""
-    def __init__(self, data_js, tokenizer):
-        self.data_js = data_js
+    def __init__(self, json_file, tokenizer, max_length=512):
+        self.meta = read_json(json_file)
         self.tokenizer = tokenizer
+        self.max_length = max_length
 
-    def __len__(self):
-        return len(self.data_js)
+    def __len__(self): return len(self.meta)
 
     def __getitem__(self, idx):
-        item = self.data_js[idx]
-        full_solution = item.get('full_solution', '')
-        true_false = item.get('true_false', item.get('step_labels', []))
-
-        entries = {}
-        steps = item.get('steps', [])
-        if not steps:
-            max_step = find_max_step(full_solution)
-            steps = [split_step(i+1, full_solution) for i in range(max_step)]
-
-        labels = []
-        for i, step in enumerate(steps):
-            if not step.strip():
-                continue
-            prompt = (
-                f"<|im_start|>system\n"
-                f"You are Qwen specialized in math. Evaluate the following step for correctness:\n"
-                f"{step}\n"
-                f"Rate 0.0-1.0:<|im_end|>"
-            )
-            inputs = self.tokenizer(
-                prompt,
-                return_tensors='pt',
-                truncation=True,
-                max_length=2048,
-                padding='max_length'
-            )
-            entries[f'{i+1}'] = {
-                'input_ids': inputs['input_ids'].squeeze(),
-                'attention_mask': inputs['attention_mask'].squeeze()
+        itm = self.meta[idx]
+        enc = self.tokenizer(itm['prefix'], truncation=True, padding='max_length', max_length=self.max_length, return_tensors='pt')
+        return {
+            'qid':itm['qid'], 
+            'input_ids':enc['input_ids'].squeeze(0), 
+            'attention_mask':enc['attention_mask'].squeeze(0), 
+            'labels':torch.tensor(float(itm['reward']),dtype=torch.float)
             }
-            if isinstance(true_false, list) and i < len(true_false):
-                labels.append(float(true_false[i]))
-            else:
-                labels.append(1.0)
-        entries['labels'] = torch.tensor(labels, dtype=torch.float)
-        return entries
-
 
 def build_dataloader(
         processor_path,
         train_json_file,
         meta_json_file,
         train_batch_size,
-        meta_batch_size
+        meta_batch_size,
+        openmath=False,
 ):
     processor = AutoProcessor.from_pretrained(processor_path)
-    train_dataset = MyDataset_QwenVL(read_json(train_json_file), processor)
-    meta_dataset = MyMetaDataset_QwenVL(read_json(meta_json_file), processor)
-    return (
-        DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True),
-        DataLoader(meta_dataset, batch_size=meta_batch_size, shuffle=True)
-    )
+    if openmath:
+        build_prefix_dataset(train_json_file, 'prefixes.json', openmath=True)
+        train_dataset = read_json('prefixes.json')
+        train_dataloader = DataLoader(MyDataset_QwenMath('prefixes.json', processor.tokenizer), batch_size=train_batch_size, shuffle=True)
+        meta_dataloader = DataLoader(MyMetaDataset_QwenMath(meta_json_file, processor.tokenizer), batch_size=meta_batch_size, shuffle=True)
+    else:
+        train_dataset = MyDataset_QwenVL(read_json(train_json_file), processor)
+        meta_dataset = MyMetaDataset_QwenVL(read_json(meta_json_file), processor)
+        train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
+        meta_dataloader = DataLoader(meta_dataset, batch_size=meta_batch_size, shuffle=True)
 
-
-def build_qwen_math_dataloader(
-        tokenizer_path,
-        train_json_file,
-        meta_json_file,
-        train_batch_size,
-        meta_batch_size
-):
-    tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_path,
-        trust_remote_code=True,
-        pad_token_id=151643
-    )
-    train_dataset = MyDataset_QwenMath(read_json(train_json_file), tokenizer)
-    meta_dataset = MyMetaDataset_QwenMath(read_json(meta_json_file), tokenizer)
-    return (
-        DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True),
-        DataLoader(meta_dataset, batch_size=meta_batch_size, shuffle=True)
-    )
+    return train_dataloader, meta_dataloader
