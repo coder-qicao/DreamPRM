@@ -1,0 +1,122 @@
+[
+  {
+    "id": 0,
+    "sid": 1,
+    "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "29",
+    "score": 0,
+    "times": 20,
+    "accuracy": 0.0
+  },
+  {
+    "id": 0,
+    "sid": 2,
+    "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>",
+    "ground_truth": "29",
+    "score": 0,
+    "times": 20,
+    "accuracy": 0.05
+  },
+  {
+    "id": 0,
+    "sid": 3,
+    "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>\n<llm-code-output>\n29.0\n</llm-code-output>",
+    "ground_truth": "29",
+    "score": 5,
+    "times": 20,
+    "accuracy": 0.5
+  },
+  {
+    "id": 0,
+    "sid": 4,
+    "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>\n<llm-code-output>\n29.0\n</llm-code-output>\nThus Martha has \\boxed{29} crayons in total.",
+    "ground_truth": "29",
+    "score": 10,
+    "times": 20,
+    "accuracy": 1.0
+  },
+  {
+    "id": 1,
+    "sid": 1,
+    "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "90",
+    "score": 0,
+    "times": 20,
+    "accuracy": 0.0
+  },
+  {
+    "id": 1,
+    "sid": 2,
+    "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>",
+    "ground_truth": "90",
+    "score": 0,
+    "times": 20,
+    "accuracy": 0.0
+  },
+  {
+    "id": 1,
+    "sid": 3,
+    "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>\n<llm-code-output>\n90\n</llm-code-output>",
+    "ground_truth": "90",
+    "score": 7,
+    "times": 20,
+    "accuracy": 0.7
+  },
+  {
+    "id": 1,
+    "sid": 4,
+    "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>\n<llm-code-output>\n90\n</llm-code-output>\nThus Tom and Phillip scored \\boxed{90} points.",
+    "ground_truth": "90",
+    "score": 10,
+    "times": 20,
+    "accuracy": 1.0
+  },
+  {
+    "id": 2,
+    "sid": 1,
+    "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
+    "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:",
+    "ground_truth": "17",
+    "score": 0,
+    "times": 20,
+    "accuracy": 0.05
+  },
+  {
+    "id": 2,
+    "sid": 2,
+    "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
+    "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>",
+    "ground_truth": "17",
+    "score": 1,
+    "times": 20,
+    "accuracy": 0.15
+  },
+  {
+    "id": 2,
+    "sid": 3,
+    "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
+    "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>\n<llm-code-output>\n17\n</llm-code-output>",
+    "ground_truth": "17",
+    "score": 7,
+    "times": 20,
+    "accuracy": 0.75
+  },
+  {
+    "id": 2,
+    "sid": 4,
+    "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
+    "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>\n<llm-code-output>\n17\n</llm-code-output>\nSo the distance between the origin and the point $(-15, 8)$ is $\\boxed{17}$ units.",
+    "ground_truth": "17",
+    "score": 10,
+    "times": 20,
+    "accuracy": 1.0
+  }
+]
