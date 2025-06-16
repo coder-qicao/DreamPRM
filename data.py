@@ -171,6 +171,60 @@ class MyDataset_Llava(Dataset):
         }
 
 
+class MyDataset_QwenMath(Dataset):
+    def __init__(self, data_js, processor):
+        self.data_js = data_js
+        self.processor = processor
+
+    def __len__(self):
+        return len(self.data_js)
+
+    def __getitem__(self, idx):
+        # Get data for this step
+        item = self.data_js[idx]
+        
+        problem_id = item['id']
+        step_id = item['sid']
+        prompt = item['input']
+        add = item['add']
+        ground_truth = item['ground_truth']
+        accuracy = item['accuracy']  # Use accuracy as label
+        
+        # Combine input and step content
+        full_text = prompt + "\n\n" + add
+        
+        # Process text only (no images)
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": full_text},
+                ],
+            }
+        ]
+        
+        text = self.processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        
+        # Process without images
+        inputs = self.processor(
+            text=[text],
+            padding=True,
+            return_tensors="pt",
+        )
+        inputs = inputs.to("cuda")
+
+        return {
+            'input_ids': inputs['input_ids'].squeeze(),
+            'attention_mask': inputs['attention_mask'].squeeze(),
+            'label': accuracy,  # Use accuracy as label
+            'problem_id': problem_id,
+            'step_id': step_id,
+            'ground_truth': ground_truth
+        }
+    
+
 class MyMetaDataset_QwenVL(Dataset):
     def __init__(self, data_js, processor):
         self.data_js = data_js
@@ -265,6 +319,86 @@ class MyMetaDataset_Llava(Dataset):
         return r_dict
 
 
+class MyMetaDataset_QwenMath(Dataset):
+    def __init__(self, data_js, processor):
+        self.data_js = data_js
+        self.processor = processor
+        # Group data by problem ID
+        self.grouped_data = self._group_by_problem_id()
+        self.problem_ids = list(self.grouped_data.keys())
+
+    def _group_by_problem_id(self):
+        """Group steps by problem ID"""
+        grouped = {}
+        for item in self.data_js:
+            problem_id = item['id']
+            if problem_id not in grouped:
+                grouped[problem_id] = []
+            grouped[problem_id].append(item)
+        
+        # Sort steps by step_id within each problem
+        for problem_id in grouped:
+            grouped[problem_id].sort(key=lambda x: x['sid'])
+        
+        return grouped
+
+    def __len__(self):
+        return len(self.problem_ids)
+
+    def __getitem__(self, idx):
+        problem_id = self.problem_ids[idx]
+        steps_data = self.grouped_data[problem_id]
+        
+        # Get problem info from first step
+        first_step = steps_data[0]
+        input_problem = first_step['input']
+        ground_truth = first_step['ground_truth']
+        
+        # Process each step
+        r_dict = {}
+        labels = []
+        
+        for step_data in steps_data:
+            step_id = step_data['sid']
+            step_text = step_data['add']
+            step_accuracy = step_data['accuracy']
+            
+            # Combine problem and step
+            full_text = input_problem + "\n\n" + step_text
+            
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": full_text},
+                    ],
+                }
+            ]
+            
+            text = self.processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            
+            inputs = self.processor(
+                text=[text],
+                padding=True,
+                return_tensors="pt",
+            )
+            inputs = inputs.to("cuda")
+            
+            r_dict[f"{step_id}"] = {
+                'input_ids': inputs['input_ids'].squeeze(),
+                'attention_mask': inputs['attention_mask'].squeeze(),
+            }
+            labels.append(step_accuracy)
+        
+        # Convert labels to tensor
+        r_dict["labels"] = torch.tensor(labels, dtype=torch.float)
+        r_dict["problem_id"] = problem_id
+        r_dict["ground_truth"] = ground_truth
+        
+        return r_dict
+    
 
 def build_dataloader(
         processor_path,
@@ -272,10 +406,21 @@ def build_dataloader(
         meta_json_file,
         train_batch_size,
         meta_batch_size,
+        dataset_type="qwen_math"  # "qwen_vl", "llava", "qwen_math"
 ):
-    processor = AutoProcessor.from_pretrained(processor_path)
-    train_dataset = MyDataset_QwenVL(read_json(train_json_file), processor)
-    meta_dataset = MyMetaDataset_QwenVL(read_json(meta_json_file), processor)
+    if dataset_type == "qwen_vl":
+        train_dataset = MyDataset_QwenVL(read_json(train_json_file), processor)
+        meta_dataset = MyMetaDataset_QwenVL(read_json(meta_json_file), processor)
+    elif dataset_type == "llava":
+        processor = AutoProcessor.from_pretrained(processor_path)
+        train_dataset = MyDataset_Llava(read_json(train_json_file), processor)
+        meta_dataset = MyMetaDataset_Llava(read_json(meta_json_file), processor)
+    elif dataset_type == "qwen_math":
+        processor = AutoProcessor.from_pretrained(processor_path)
+        train_dataset = MyDataset_QwenVL(read_json(train_json_file), processor)
+        meta_dataset = MyMetaDataset_QwenVL(read_json(meta_json_file), processor)
+    else:
+        raise ValueError(f"Unknown dataset_type: {dataset_type}")
     train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
     meta_dataloader = DataLoader(meta_dataset, batch_size=meta_batch_size, shuffle=True)
 

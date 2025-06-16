@@ -1,13 +1,14 @@
 # All code is original unless otherwise noted.
 '''
 python3 main.py \
-  --train_json_file data/train.json \
-  --meta_json_file  data/meta.json \
+  --train_json_file data/train_math.json \
+  --meta_json_file  data/meta_math.json \
   --weights_path    outputs/math_prm \
   --batch_size      4 \
   --lr              1e-6 \
   --meta_lr         1e-2 \
   --iteration_num   5000 \
+  --dataset_type    qwen_math \
   --device          cuda
 
 '''
@@ -29,6 +30,7 @@ parser = argparse.ArgumentParser(description="DreamPRM")
 parser.add_argument('--train_json_file', type=str)
 parser.add_argument('--meta_json_file', type=str)
 parser.add_argument('--weights_path', type=str)
+parser.add_argument('--dataset_type', type=str, default="qwen_math", choices=["qwen_vl", "llava", "qwen_math"])
 parser.add_argument("--iteration_num", type=int, default=10000)
 parser.add_argument("--save_every_iterations", type=int, default=1000)
 parser.add_argument("--unroll_steps", type=int, default=5)
@@ -78,6 +80,7 @@ resume_labels = None
     meta_json_file = args.meta_json_file,
     train_batch_size= args.batch_size,
     meta_batch_size= args.batch_size,
+    dataset_type=args.dataset_type,
 )
 wandb.init(project="DreamPRM")
 
@@ -96,18 +99,33 @@ class Upper(ImplicitProblem):
         return self.module(domain_strings, x)
 
     def training_step(self, batch):
-        # steps = [batch['1'], batch['2'], batch['3'], batch['4'], batch['5'],]
+        # Get numeric step keys and sort them
         numeric_keys = [k for k in batch.keys() if k.isdigit()]
         sorted_keys = sorted(numeric_keys, key=lambda x: int(x))
         steps = [batch[key] for key in sorted_keys]
         labels = batch['labels'].to(device)
+        
         mean_score = 0
         for i in steps:
-            score = self.inner(i['input_ids'].to(device),
+            if args.dataset_type == "qwen_math":
+                # For math datasets (text-only)
+                score = self.inner(i['input_ids'].to(device),
+                                 i['attention_mask'].to(device))
+            else:
+                # For vision datasets (QwenVL, LLaVA)
+                if args.dataset_type == "qwen_vl":
+                    score = self.inner(i['input_ids'].to(device),
                                      i['attention_mask'].to(device),
                                      i['pixel_values'].to(device),
                                      i['image_grid_thw'].to(device))
+                elif args.dataset_type == "llava":
+                    score = self.inner(i['input_ids'].to(device),
+                                     i['attention_mask'].to(device),
+                                     i['pixel_values'].to(device),
+                                     i['image_sizes'].to(device))
+            
             mean_score += torch.log(score / (1 - score))
+        
         outputs = torch.sigmoid(mean_score / len(steps))
         loss = criterion_meta(outputs, labels)
         upper_loss.append(loss.item())
@@ -139,25 +157,50 @@ class Upper(ImplicitProblem):
 
 
 class Lower(ImplicitProblem):
-    def forward(self, input_ids, attention_mask, pixel_values, image_grid_thw):
+    def forward(self, input_ids, attention_mask, pixel_values=None, image_grid_thw=None, image_sizes=None):
         # torch.cuda.empty_cache()
-        return self.module(input_ids, attention_mask, pixel_values, image_grid_thw)
+        if args.dataset_type == "qwen_math":
+            return self.module(input_ids, attention_mask)
+        elif args.dataset_type == "qwen_vl":
+            return self.module(input_ids, attention_mask, pixel_values, image_grid_thw)
+        elif args.dataset_type == "llava":
+            return self.module(input_ids, attention_mask, pixel_values, image_sizes)
 
     def training_step(self, batch):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
-        pixel_values = batch['pixel_values'].to(device)
-        image_grid_thw = batch['image_grid_thw'].to(device)
         labels = batch['label'].to(dtype=torch.float).to(device)
-        domain_strings = batch['dataset']
-        outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask, pixel_values=pixel_values,
-                     image_grid_thw=image_grid_thw)
+        
+        # Get domain strings based on dataset type
+        if args.dataset_type == "qwen_math":
+            # For math datasets, create domain strings from problem_id
+            domain_strings = [f"problem_{pid}" for pid in batch['problem_id']]
+        else:
+            # For vision datasets, use dataset field
+            domain_strings = batch['dataset']
+        
+        # Forward pass based on dataset type
+        if args.dataset_type == "qwen_math":
+            outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask)
+        elif args.dataset_type == "qwen_vl":
+            pixel_values = batch['pixel_values'].to(device)
+            image_grid_thw = batch['image_grid_thw'].to(device)
+            outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask, 
+                                 pixel_values=pixel_values, image_grid_thw=image_grid_thw)
+        elif args.dataset_type == "llava":
+            pixel_values = batch['pixel_values'].to(device)
+            image_sizes = batch['image_sizes'].to(device)
+            outputs = self.forward(input_ids=input_ids, attention_mask=attention_mask,
+                                 pixel_values=pixel_values, image_sizes=image_sizes)
+        
         if args.baseline or args.retrain:
             return criterion(outputs, labels)
+        
         loss = criterion(outputs, labels)
         weighted_loss = self.upper(domain_strings, loss)
         lower_loss.append(loss.item())
         lower_weighted_loss.append(weighted_loss.item())
+        
         if len(lower_loss) == 100:
             mean_inner_loss = np.mean(lower_loss)
             mean_inner_weighted_loss = np.mean(lower_weighted_loss)
@@ -173,7 +216,12 @@ class Lower(ImplicitProblem):
         return train_dataloader
 
     def configure_module(self):
-        return QwenVL_RM(device)
+        if args.dataset_type == "qwen_math":
+            return QwenMath_RM(device)  # You'll need to create this model class
+        elif args.dataset_type == "qwen_vl":
+            return QwenVL_RM(device)
+        elif args.dataset_type == "llava":
+            return LLaVA_RM(device)  # You'll need to create this model class
 
     def configure_optimizer(self):
         optimizer = AdamW(
@@ -189,14 +237,22 @@ class Lower(ImplicitProblem):
         return scheduler
 
 
-
 class ReweightingEngine(Engine):
     @torch.no_grad()
     def validation(self):
-        torch.save(
-            self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
-        )
-        self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        if args.dataset_type == "qwen_math":
+            # For math models, save different components
+            torch.save(
+                self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
+            )
+            self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        else:
+            # For vision models
+            torch.save(
+                self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
+            )
+            self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        
         torch.save(
             self.outer.state_dict(),
             f"{args.weights_path}/domain_weights.pt",

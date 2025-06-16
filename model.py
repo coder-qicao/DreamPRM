@@ -1,10 +1,8 @@
-from transformers import Qwen2VLForConditionalGeneration, LlavaOnevisionForConditionalGeneration
+from transformers import Qwen2VLForConditionalGeneration, LlavaOnevisionForConditionalGeneration, Qwen2ForCausalLM
 import torch.nn.functional as F
-from peft import LoraConfig, get_peft_model, TaskType
+from peft import LoraConfig, get_peft_model
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoTokenizer
-
 
 # # Define LoRA configuration
 # lora_config = LoraConfig(
@@ -67,6 +65,35 @@ class Llava_RM(nn.Module):
         value_outputs = self.LN(outputs)
         value_outputs = self.sigmoid(value_outputs)
         # print(value_outputs)
+        return value_outputs.squeeze(dim=1)
+
+
+class QwenMath_RM(nn.Module):
+    def __init__(self, device, model_path="Qwen/Qwen2.5-Math-7B-Instruct"):
+        super(QwenMath_RM, self).__init__()
+        self.base_model = Qwen2ForCausalLM.from_pretrained(
+            model_path,
+            torch_dtype=torch.bfloat16,
+            attn_implementation="flash_attention_2",
+            device_map=device,
+        )
+        # Linear layer mapping from vocabulary size to single scalar reward.
+        self.LN = nn.Linear(self.base_model.config.vocab_size, 1)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, input_ids, attention_mask):
+        # Passes text inputs through the base Qwen2 model to get logits.
+        outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
+        # Passes text inputs through the base Qwen2 model to get logits.
+        # [:, -1, :]: Takes logits of the final token position.
+        outputs = outputs.logits[:, -1, :].to(dtype=torch.float)
+        # print(outputs)
+        # Maps logits to scalar reward using linear layer.
+        value_outputs = self.LN(outputs)
+        # Applies sigmoid to get probability in [0,1] range.
+        value_outputs = self.sigmoid(value_outputs)
+        # print(value_outputs)
+        # Removes dimension to return shape [batch_size] instead of [batch_size, 1].
         return value_outputs.squeeze(dim=1)
     
 
