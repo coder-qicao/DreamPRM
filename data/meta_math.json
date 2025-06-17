@@ -4,119 +4,279 @@
     "sid": 1,
     "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
     "add": "Let's solve this problem using Python code.",
-    "ground_truth": "29",
-    "score": 0,
-    "times": 20,
-    "accuracy": 0.0
+    "ground_truth": "29"
   },
   {
     "id": 0,
     "sid": 2,
     "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>",
-    "ground_truth": "29",
-    "score": 0,
-    "times": 20,
-    "accuracy": 0.05
+    "ground_truth": "29"
   },
   {
     "id": 0,
     "sid": 3,
     "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>\n<llm-code-output>\n29.0\n</llm-code-output>",
-    "ground_truth": "29",
-    "score": 5,
-    "times": 20,
-    "accuracy": 0.5
+    "ground_truth": "29"
   },
   {
     "id": 0,
     "sid": 4,
     "input": "Martha has 18 crayons. She lost half of them, so she bought a new set of 20 crayons. How many crayons in total does Martha have after the purchase?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\namount_of_lost_crayons = 18 / 2\namount_of_new_crayons = 20\ntotal_amount = amount_of_lost_crayons + amount_of_new_crayons\ntotal_amount\n</llm-code>\n<llm-code-output>\n29.0\n</llm-code-output>\nThus Martha has \\boxed{29} crayons in total.",
-    "ground_truth": "29",
-    "score": 10,
-    "times": 20,
-    "accuracy": 1.0
+    "ground_truth": "29"
   },
   {
     "id": 1,
     "sid": 1,
     "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
     "add": "Let's solve this problem using Python code.",
-    "ground_truth": "90",
-    "score": 0,
-    "times": 20,
-    "accuracy": 0.0
+    "ground_truth": "90"
   },
   {
     "id": 1,
     "sid": 2,
     "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>",
-    "ground_truth": "90",
-    "score": 0,
-    "times": 20,
-    "accuracy": 0.0
+    "ground_truth": "90"
   },
   {
     "id": 1,
     "sid": 3,
     "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>\n<llm-code-output>\n90\n</llm-code-output>",
-    "ground_truth": "90",
-    "score": 7,
-    "times": 20,
-    "accuracy": 0.7
+    "ground_truth": "90"
   },
   {
     "id": 1,
     "sid": 4,
     "input": "Noa scored 30 points to win a bowl, and Phillip scores twice that number. What is the total number of points Tom and Phillip scored to win the bowl?",
     "add": "Let's solve this problem using Python code.\n<llm-code>\nscore_first_player = 30\nscore_second_player = 2 * score_first_player\nscore_first_player + score_second_player\n</llm-code>\n<llm-code-output>\n90\n</llm-code-output>\nThus Tom and Phillip scored \\boxed{90} points.",
-    "ground_truth": "90",
-    "score": 10,
-    "times": 20,
-    "accuracy": 1.0
+    "ground_truth": "90"
   },
   {
     "id": 2,
     "sid": 1,
     "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
     "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:",
-    "ground_truth": "17",
-    "score": 0,
-    "times": 20,
-    "accuracy": 0.05
+    "ground_truth": "17"
   },
   {
     "id": 2,
     "sid": 2,
     "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
     "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>",
-    "ground_truth": "17",
-    "score": 1,
-    "times": 20,
-    "accuracy": 0.15
+    "ground_truth": "17"
   },
   {
     "id": 2,
     "sid": 3,
     "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
     "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>\n<llm-code-output>\n17\n</llm-code-output>",
-    "ground_truth": "17",
-    "score": 7,
-    "times": 20,
-    "accuracy": 0.75
+    "ground_truth": "17"
   },
   {
     "id": 2,
     "sid": 4,
     "input": "In a rectangular coordinate system, what is the number of units in the distance from the origin to the point $(-15, 8)$?",
     "add": "To find the distance between the origin $(0, 0)$ and the point $(-15, 8)$ in a rectangular coordinate system, we can use the distance formula:\n$$d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$\nwhere $(x_1, y_1)$ is the coordinate of the first point and $(x_2, y_2)$ is the coordinate of the second point.\nSubstituting the values for the origin and the given point, we get:\n<llm-code>\nfrom sympy import sqrt\n\nx1, y1, x2, y2 = 0, 0, -15, 8\n\ndistance = sqrt((x2 - x1)**2 + (y2 - y1)**2)\ndistance\n</llm-code>\n<llm-code-output>\n17\n</llm-code-output>\nSo the distance between the origin and the point $(-15, 8)$ is $\\boxed{17}$ units.",
-    "ground_truth": "17",
-    "score": 10,
-    "times": 20,
-    "accuracy": 1.0
+    "ground_truth": "17"
+  },
+  {
+    "id": 3,
+    "sid": 1,
+    "input": "The four-digit numeral $3AA1$ is divisible by 9. What digit does $A$ represent?",
+    "add": "To solve this, we will find the possible values for $A$ that make $3AA1$ divisible by 9 using Python.",
+    "ground_truth": "7"
+  },
+  {
+    "id": 3,
+    "sid": 2,
+    "input": "The four-digit numeral $3AA1$ is divisible by 9. What digit does $A$ represent?",
+    "add": "To solve this, we will find the possible values for $A$ that make $3AA1$ divisible by 9 using Python.\n<llm-code>\ndef is_divisible_by_9(numeral):\n    return numeral % 9 == 0\n\nfor a in range(10):\n    numeral = str(3 * 100 + a * 10 + a * 10 + 1)\n    if is_divisible_by_9(int(numeral)):\n        print(f\"When A is {a}, the numeral 3AA1 is divisible by 9.\")\n</llm-code>",
+    "ground_truth": "7"
+  },
+  {
+    "id": 3,
+    "sid": 3,
+    "input": "The four-digit numeral $3AA1$ is divisible by 9. What digit does $A$ represent?",
+    "add": "To solve this, we will find the possible values for $A$ that make $3AA1$ divisible by 9 using Python.\n<llm-code>\ndef is_divisible_by_9(numeral):\n    return numeral % 9 == 0\n\nfor a in range(10):\n    numeral = str(3 * 100 + a * 10 + a * 10 + 1)\n    if is_divisible_by_9(int(numeral)):\n        print(f\"When A is {a}, the numeral 3AA1 is divisible by 9.\")\n</llm-code>\n<llm-code-output>\nWhen A is 7, the numeral 3AA1 is divisible by 9.\n</llm-code-output>",
+    "ground_truth": "7"
+  },
+  {
+    "id": 3,
+    "sid": 4,
+    "input": "The four-digit numeral $3AA1$ is divisible by 9. What digit does $A$ represent?",
+    "add": "To solve this, we will find the possible values for $A$ that make $3AA1$ divisible by 9 using Python.\n<llm-code>\ndef is_divisible_by_9(numeral):\n    return numeral % 9 == 0\n\nfor a in range(10):\n    numeral = str(3 * 100 + a * 10 + a * 10 + 1)\n    if is_divisible_by_9(int(numeral)):\n        print(f\"When A is {a}, the numeral 3AA1 is divisible by 9.\")\n</llm-code>\n<llm-code-output>\nWhen A is 7, the numeral 3AA1 is divisible by 9.\n</llm-code-output>\nSo $A$ represents $\\boxed{7}$",
+    "ground_truth": "7"
+  },
+  {
+    "id": 4,
+    "sid": 1,
+    "input": "Of the 90 people on William's bus, 3/5 were Dutch. Of the 1/2 of the Dutch who were also American, 1/3 got window seats. What's the number of Dutch Americans who sat at the windows?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "9"
+  },
+  {
+    "id": 4,
+    "sid": 2,
+    "input": "Of the 90 people on William's bus, 3/5 were Dutch. Of the 1/2 of the Dutch who were also American, 1/3 got window seats. What's the number of Dutch Americans who sat at the windows?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nnumber_of_passengers = 90\nnumber_of_dutch_passengers = 3 / 5 * number_of_passengers\nnumber_of_dutch_american_passengers = 1 / 2 * number_of_dutch_passengers\nwindow_sitting_passengers = 1 / 3 * number_of_dutch_american_passengers\nwindow_sitting_passengers\n</llm-code>",
+    "ground_truth": "9"
+  },
+  {
+    "id": 4,
+    "sid": 3,
+    "input": "Of the 90 people on William's bus, 3/5 were Dutch. Of the 1/2 of the Dutch who were also American, 1/3 got window seats. What's the number of Dutch Americans who sat at the windows?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nnumber_of_passengers = 90\nnumber_of_dutch_passengers = 3 / 5 * number_of_passengers\nnumber_of_dutch_american_passengers = 1 / 2 * number_of_dutch_passengers\nwindow_sitting_passengers = 1 / 3 * number_of_dutch_american_passengers\nwindow_sitting_passengers\n</llm-code>\n<llm-code-output>\n9.0\n</llm-code-output>",
+    "ground_truth": "9"
+  },
+  {
+    "id": 4,
+    "sid": 4,
+    "input": "Of the 90 people on William's bus, 3/5 were Dutch. Of the 1/2 of the Dutch who were also American, 1/3 got window seats. What's the number of Dutch Americans who sat at the windows?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nnumber_of_passengers = 90\nnumber_of_dutch_passengers = 3 / 5 * number_of_passengers\nnumber_of_dutch_american_passengers = 1 / 2 * number_of_dutch_passengers\nwindow_sitting_passengers = 1 / 3 * number_of_dutch_american_passengers\nwindow_sitting_passengers\n</llm-code>\n<llm-code-output>\n9.0\n</llm-code-output>\nThus the number of Dutch Americans that sat at the windows is \\boxed{9}.",
+    "ground_truth": "9"
+  },
+  {
+    "id": 5,
+    "sid": 1,
+    "input": "Jaynie wants to make leis for the graduation party.  It will take 2 and half dozen plumeria flowers to make 1 lei.  If she wants to make 4 leis, how many plumeria flowers must she pick from the trees in her yard?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "120"
+  },
+  {
+    "id": 5,
+    "sid": 2,
+    "input": "Jaynie wants to make leis for the graduation party.  It will take 2 and half dozen plumeria flowers to make 1 lei.  If she wants to make 4 leis, how many plumeria flowers must she pick from the trees in her yard?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\n# the multiplication step\nnumber_of_flowers_for_one_lei = 2.5 * 12\n\n# repeat it for 4 times\nnumber_of_flowers_for_four_leis = number_of_flowers_for_one_lei * 4\nnumber_of_flowers_for_four_leis\n</llm-code>",
+    "ground_truth": "120"
+  },
+  {
+    "id": 5,
+    "sid": 3,
+    "input": "Jaynie wants to make leis for the graduation party.  It will take 2 and half dozen plumeria flowers to make 1 lei.  If she wants to make 4 leis, how many plumeria flowers must she pick from the trees in her yard?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\n# the multiplication step\nnumber_of_flowers_for_one_lei = 2.5 * 12\n\n# repeat it for 4 times\nnumber_of_flowers_for_four_leis = number_of_flowers_for_one_lei * 4\nnumber_of_flowers_for_four_leis\n</llm-code>\n<llm-code-output>\n120.0\n</llm-code-output>",
+    "ground_truth": "120"
+  },
+  {
+    "id": 5,
+    "sid": 4,
+    "input": "Jaynie wants to make leis for the graduation party.  It will take 2 and half dozen plumeria flowers to make 1 lei.  If she wants to make 4 leis, how many plumeria flowers must she pick from the trees in her yard?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\n# the multiplication step\nnumber_of_flowers_for_one_lei = 2.5 * 12\n\n# repeat it for 4 times\nnumber_of_flowers_for_four_leis = number_of_flowers_for_one_lei * 4\nnumber_of_flowers_for_four_leis\n</llm-code>\n<llm-code-output>\n120.0\n</llm-code-output>\nThus Jaynie has to pick \\boxed{120} flowers.",
+    "ground_truth": "120"
+  },
+  {
+    "id": 6,
+    "sid": 1,
+    "input": "The price of an iPhone fell 10% in a particular month and another 20% in the second month.  If the initial price was $1000, calculate the price after the second month.",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "720"
+  },
+  {
+    "id": 6,
+    "sid": 2,
+    "input": "The price of an iPhone fell 10% in a particular month and another 20% in the second month.  If the initial price was $1000, calculate the price after the second month.",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nstarting_price = 1000\nprice_in_first_month = starting_price - starting_price * 10 / 100\nprice_in_second_month = price_in_first_month - price_in_first_month * 20 / 100\nprice_in_second_month\n</llm-code>",
+    "ground_truth": "720"
+  },
+  {
+    "id": 6,
+    "sid": 3,
+    "input": "The price of an iPhone fell 10% in a particular month and another 20% in the second month.  If the initial price was $1000, calculate the price after the second month.",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nstarting_price = 1000\nprice_in_first_month = starting_price - starting_price * 10 / 100\nprice_in_second_month = price_in_first_month - price_in_first_month * 20 / 100\nprice_in_second_month\n</llm-code>\n<llm-code-output>\n720.0\n</llm-code-output>",
+    "ground_truth": "720"
+  },
+  {
+    "id": 6,
+    "sid": 4,
+    "input": "The price of an iPhone fell 10% in a particular month and another 20% in the second month.  If the initial price was $1000, calculate the price after the second month.",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nstarting_price = 1000\nprice_in_first_month = starting_price - starting_price * 10 / 100\nprice_in_second_month = price_in_first_month - price_in_first_month * 20 / 100\nprice_in_second_month\n</llm-code>\n<llm-code-output>\n720.0\n</llm-code-output>\nThus the new price after the second month is \\boxed{720} dollars.",
+    "ground_truth": "720"
+  },
+  {
+    "id": 7,
+    "sid": 1,
+    "input": "Lennon is a sales rep and is paid $0.36 in mileage reimbursement when he travels to meet with clients.  On Monday he drove 18 miles.  Tuesday he drove 26 miles.  Wednesday and Thursday he drove 20 miles each day and on Friday he drove 16 miles.  How much money will he be reimbursed?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "36"
+  },
+  {
+    "id": 7,
+    "sid": 2,
+    "input": "Lennon is a sales rep and is paid $0.36 in mileage reimbursement when he travels to meet with clients.  On Monday he drove 18 miles.  Tuesday he drove 26 miles.  Wednesday and Thursday he drove 20 miles each day and on Friday he drove 16 miles.  How much money will he be reimbursed?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nmonday_distance = 18\ntuesday_distance = 26\nwednesday_distance = 20\nthursday_distance = 20\nfriday_distance = 16\n\n# sum up daily distances\ntotal_distance = monday_distance + tuesday_distance + wednesday_distance + thursday_distance + friday_distance\n\n# multiply distance traveled with reimbursement rate\nreimbursement_amount = total_distance * 0.36\n\n# sum up to get the total\nreimbursement_amount\n</llm-code>",
+    "ground_truth": "36"
+  },
+  {
+    "id": 7,
+    "sid": 3,
+    "input": "Lennon is a sales rep and is paid $0.36 in mileage reimbursement when he travels to meet with clients.  On Monday he drove 18 miles.  Tuesday he drove 26 miles.  Wednesday and Thursday he drove 20 miles each day and on Friday he drove 16 miles.  How much money will he be reimbursed?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nmonday_distance = 18\ntuesday_distance = 26\nwednesday_distance = 20\nthursday_distance = 20\nfriday_distance = 16\n\n# sum up daily distances\ntotal_distance = monday_distance + tuesday_distance + wednesday_distance + thursday_distance + friday_distance\n\n# multiply distance traveled with reimbursement rate\nreimbursement_amount = total_distance * 0.36\n\n# sum up to get the total\nreimbursement_amount\n</llm-code>\n<llm-code-output>\n36.0\n</llm-code-output>",
+    "ground_truth": "36"
+  },
+  {
+    "id": 7,
+    "sid": 4,
+    "input": "Lennon is a sales rep and is paid $0.36 in mileage reimbursement when he travels to meet with clients.  On Monday he drove 18 miles.  Tuesday he drove 26 miles.  Wednesday and Thursday he drove 20 miles each day and on Friday he drove 16 miles.  How much money will he be reimbursed?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nmonday_distance = 18\ntuesday_distance = 26\nwednesday_distance = 20\nthursday_distance = 20\nfriday_distance = 16\n\n# sum up daily distances\ntotal_distance = monday_distance + tuesday_distance + wednesday_distance + thursday_distance + friday_distance\n\n# multiply distance traveled with reimbursement rate\nreimbursement_amount = total_distance * 0.36\n\n# sum up to get the total\nreimbursement_amount\n</llm-code>\n<llm-code-output>\n36.0\n</llm-code-output>\nThus the total amount that Lennon is reimbursed is \\boxed{36} dollars.",
+    "ground_truth": "36"
+  },
+  {
+    "id": 8,
+    "sid": 1,
+    "input": "Susan wants to throw a party for her mom. She is planning on having 30 guests. For dinner she is making a recipe that makes 2 servings each. Each batch of the recipe calls for 4 potatoes and 1 teaspoon of salt. A potato costs $.10 and a container of salt costs $2 at the supermarket. If each container of salt has 5 teaspoons, how much money will Susan spend on food?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "12"
+  },
+  {
+    "id": 8,
+    "sid": 2,
+    "input": "Susan wants to throw a party for her mom. She is planning on having 30 guests. For dinner she is making a recipe that makes 2 servings each. Each batch of the recipe calls for 4 potatoes and 1 teaspoon of salt. A potato costs $.10 and a container of salt costs $2 at the supermarket. If each container of salt has 5 teaspoons, how much money will Susan spend on food?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nservings_per_batch = 2\nservings_for_all_guests = 30\nbatches_needed = servings_for_all_guests / servings_per_batch\n# batches needed = 15\n\n# potatoes in 1 batch\npotatoes_per_batch = 4\npotatoes_needed = potatoes_per_batch * batches_needed\n# potatoes needed = 60\n\n# salt in 1 batch\nsalt_per_batch = 1\nteaspoons_needed = salt_per_batch * batches_needed\n# teaspoons needed = 15\n\n# salt containers per teaspoon\ncontainers_per_teaspoon = 5\ncontainers_needed = teaspoons_needed / containers_per_teaspoon\n# containers needed = 3\n\n# potatoes cost\npotatoes_cost = potatoes_needed * 0.1\n# salt cost\nsalt_cost = containers_needed * 2\n# total cost\ntotal_cost = potatoes_cost + salt_cost\ntotal_cost\n</llm-code>",
+    "ground_truth": "12"
+  },
+  {
+    "id": 8,
+    "sid": 3,
+    "input": "Susan wants to throw a party for her mom. She is planning on having 30 guests. For dinner she is making a recipe that makes 2 servings each. Each batch of the recipe calls for 4 potatoes and 1 teaspoon of salt. A potato costs $.10 and a container of salt costs $2 at the supermarket. If each container of salt has 5 teaspoons, how much money will Susan spend on food?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nservings_per_batch = 2\nservings_for_all_guests = 30\nbatches_needed = servings_for_all_guests / servings_per_batch\n# batches needed = 15\n\n# potatoes in 1 batch\npotatoes_per_batch = 4\npotatoes_needed = potatoes_per_batch * batches_needed\n# potatoes needed = 60\n\n# salt in 1 batch\nsalt_per_batch = 1\nteaspoons_needed = salt_per_batch * batches_needed\n# teaspoons needed = 15\n\n# salt containers per teaspoon\ncontainers_per_teaspoon = 5\ncontainers_needed = teaspoons_needed / containers_per_teaspoon\n# containers needed = 3\n\n# potatoes cost\npotatoes_cost = potatoes_needed * 0.1\n# salt cost\nsalt_cost = containers_needed * 2\n# total cost\ntotal_cost = potatoes_cost + salt_cost\ntotal_cost\n</llm-code>\n<llm-code-output>\n12.0\n</llm-code-output>",
+    "ground_truth": "12"
+  },
+  {
+    "id": 8,
+    "sid": 4,
+    "input": "Susan wants to throw a party for her mom. She is planning on having 30 guests. For dinner she is making a recipe that makes 2 servings each. Each batch of the recipe calls for 4 potatoes and 1 teaspoon of salt. A potato costs $.10 and a container of salt costs $2 at the supermarket. If each container of salt has 5 teaspoons, how much money will Susan spend on food?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nservings_per_batch = 2\nservings_for_all_guests = 30\nbatches_needed = servings_for_all_guests / servings_per_batch\n# batches needed = 15\n\n# potatoes in 1 batch\npotatoes_per_batch = 4\npotatoes_needed = potatoes_per_batch * batches_needed\n# potatoes needed = 60\n\n# salt in 1 batch\nsalt_per_batch = 1\nteaspoons_needed = salt_per_batch * batches_needed\n# teaspoons needed = 15\n\n# salt containers per teaspoon\ncontainers_per_teaspoon = 5\ncontainers_needed = teaspoons_needed / containers_per_teaspoon\n# containers needed = 3\n\n# potatoes cost\npotatoes_cost = potatoes_needed * 0.1\n# salt cost\nsalt_cost = containers_needed * 2\n# total cost\ntotal_cost = potatoes_cost + salt_cost\ntotal_cost\n</llm-code>\n<llm-code-output>\n12.0\n</llm-code-output>\nThus the total cost comes to \\boxed{12} dollars.",
+    "ground_truth": "12"
+  },
+  {
+    "id": 9,
+    "sid": 1,
+    "input": "A bottle of wine costs $20.00 today.  When new tariffs are imposed in 2 months, the price of wine will increase by 25%.  How much more expensive will 5 bottles of wine be in 2 months?",
+    "add": "Let's solve this problem using Python code.",
+    "ground_truth": "25"
+  },
+  {
+    "id": 9,
+    "sid": 2,
+    "input": "A bottle of wine costs $20.00 today.  When new tariffs are imposed in 2 months, the price of wine will increase by 25%.  How much more expensive will 5 bottles of wine be in 2 months?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nprice_per_bottle = 20\nnumber_of_bottles = 5\nnew_tariff_percentage = 25\nnew_price_per_bottle = price_per_bottle + price_per_bottle * new_tariff_percentage / 100\nnew_price_for_five_bottles = number_of_bottles * new_price_per_bottle\nnew_price_for_five_bottles - 5 * price_per_bottle\n</llm-code>",
+    "ground_truth": "25"
+  },
+  {
+    "id": 9,
+    "sid": 3,
+    "input": "A bottle of wine costs $20.00 today.  When new tariffs are imposed in 2 months, the price of wine will increase by 25%.  How much more expensive will 5 bottles of wine be in 2 months?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nprice_per_bottle = 20\nnumber_of_bottles = 5\nnew_tariff_percentage = 25\nnew_price_per_bottle = price_per_bottle + price_per_bottle * new_tariff_percentage / 100\nnew_price_for_five_bottles = number_of_bottles * new_price_per_bottle\nnew_price_for_five_bottles - 5 * price_per_bottle\n</llm-code>\n<llm-code-output>\n25.0\n</llm-code-output>",
+    "ground_truth": "25"
+  },
+  {
+    "id": 9,
+    "sid": 4,
+    "input": "A bottle of wine costs $20.00 today.  When new tariffs are imposed in 2 months, the price of wine will increase by 25%.  How much more expensive will 5 bottles of wine be in 2 months?",
+    "add": "Let's solve this problem using Python code.\n<llm-code>\nprice_per_bottle = 20\nnumber_of_bottles = 5\nnew_tariff_percentage = 25\nnew_price_per_bottle = price_per_bottle + price_per_bottle * new_tariff_percentage / 100\nnew_price_for_five_bottles = number_of_bottles * new_price_per_bottle\nnew_price_for_five_bottles - 5 * price_per_bottle\n</llm-code>\n<llm-code-output>\n25.0\n</llm-code-output>\nThus when new tariffs are imposed, 5 bottles of wine will be \\boxed{25} dollars more expensive.",
+    "ground_truth": "25"
   }
 ]
