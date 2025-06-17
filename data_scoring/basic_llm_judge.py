@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-python3 basic_llm_judge.py --raw_json data/openmathinstruct-1.json --train_json data/train_math.json --meta_json data/meta_math.json
+python3 llm_judge_scoring.py --raw_json data/openmathinstruct-1.json --train_json data/train_math.json --meta_json data/meta_math.json
 """
 import argparse
 import json
 import re
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from typing import List, Dict
 
 
-def split_steps_openmath(sol: str) -> list[str]:
+def split_steps_openmath(sol: str) -> List[str]:
     """Split OpenMathInstruct-1 solutions into logical reasoning steps."""
     steps = []
     code_pattern = r'<llm-code>.*?</llm-code>'
@@ -23,22 +24,18 @@ def split_steps_openmath(sol: str) -> list[str]:
     
     current_pos = 0
     for i, code_match in enumerate(code_matches):
-        # Add text before code block (reasoning/setup)
         text_before = sol[current_pos:code_match.start()].strip()
         if text_before:
             steps.append(text_before)
         
-        # Add code block (implementation)
         steps.append(code_match.group().strip())
         
-        # Add corresponding output (results)
         if i < len(output_matches):
             steps.append(output_matches[i].group().strip())
             current_pos = output_matches[i].end()
         else:
             current_pos = code_match.end()
     
-    # Add remaining text (conclusion)
     remaining_text = sol[current_pos:].strip()
     if remaining_text:
         steps.append(remaining_text)
@@ -46,13 +43,16 @@ def split_steps_openmath(sol: str) -> list[str]:
     return [step for step in steps if step.strip()]
 
 
-def build_prefix_dataset(raw_data: list[dict]) -> list[dict]:
+def build_prefix_dataset(raw_data: List[Dict], default_dataset: str = "openmath") -> List[Dict]:
     """Generate prefix entries for each partial solution."""
     prefixes = []
     for idx, item in enumerate(raw_data):
         question = item.get('question', '')
         expected_answer = str(item.get('expected_answer', ''))
         solution = item.get('generated_solution', '')
+        
+        # Extract dataset info if available, otherwise use default
+        dataset_name = item.get('dataset', default_dataset)
         
         steps = split_steps_openmath(solution)
         
@@ -64,9 +64,34 @@ def build_prefix_dataset(raw_data: list[dict]) -> list[dict]:
                 'sid': sid,
                 'input': question,
                 'add': prefix_text,
-                'ground_truth': expected_answer
+                'ground_truth': expected_answer,
+                'image_path': item.get('image_path', ''),  # Empty if no image
+                'dataset': dataset_name
             })
     return prefixes
+
+
+def build_meta_dataset(train_data: List[Dict], accuracy_threshold: float = 0.7) -> List[Dict]:
+    """Build meta dataset with true_false labels and combined input."""
+    meta_data = []
+    
+    for item in train_data:
+        # Combine question and partial response
+        combined_input = f"Question: {item['input']}\n\nSolution: {item['add']}"
+        
+        # Determine true/false based on accuracy
+        accuracy = item.get('accuracy', 0.5)
+        true_false = accuracy >= accuracy_threshold
+        
+        meta_item = {
+            'id': item['id'],
+            'true_false': true_false,
+            'input': combined_input,
+            'image_path': item['image_path']
+        }
+        meta_data.append(meta_item)
+    
+    return meta_data
 
 
 class MathStepJudge:
@@ -121,87 +146,112 @@ Score:"""
         
         return 0.5  # Default score
     
-    def batch_score_steps(self, items: list[dict]) -> list[float]:
-        """Score multiple steps efficiently"""
-        scores = []
+    def batch_score_steps(self, items: List[Dict]) -> List[Dict]:
+        """Score multiple steps and return training format"""
+        train_data = []
+        total = len(items)
+        
         for i, item in enumerate(items):
             if i % 10 == 0:
-                print(f"Scoring step {i+1}/{len(items)}")
+                print(f"Scoring step {i+1}/{total}")
             
             score = self.score_step(
                 item['input'],
                 item['add'], 
                 item['ground_truth']
             )
-            scores.append(score)
+            
+            # Create training format result
+            train_item = {
+                'id': item['id'],
+                'sid': item['sid'],
+                'input': item['input'],
+                'add': item['add'],
+                'ground_truth': item['ground_truth'],
+                'image_path': item['image_path'],
+                'dataset': item['dataset'],
+                'score': int(score * 10),  # 0-10 scale
+                'times': 1,  # LLM judge uses single evaluation
+                'accuracy': score  # 0-1 scale
+            }
+            train_data.append(train_item)
         
-        return scores
+        return train_data
 
 
 def main():
     parser = argparse.ArgumentParser(description="LLM judge scoring for math problems")
     parser.add_argument('--raw_json', required=True, help='Raw OpenMathInstruct JSON file')
     parser.add_argument('--train_json', required=True, help='Output train JSON with LLM scores')
-    parser.add_argument('--meta_json', required=True, help='Output meta JSON without scores')
+    parser.add_argument('--meta_json', required=True, help='Output meta JSON with true/false labels')
     parser.add_argument('--judge_model', default='Qwen/Qwen2.5-14B-Instruct', help='LLM judge model')
+    parser.add_argument('--max_items', type=int, help='Limit number of items for testing')
+    parser.add_argument('--dataset_name', default='openmath', help='Dataset name to use')
+    parser.add_argument('--accuracy_threshold', type=float, default=0.7, help='Threshold for meta true/false')
     parser.add_argument('--skip_scoring', action='store_true', help='Skip LLM scoring for testing')
     args = parser.parse_args()
 
-    # Load raw data
+    # Load and process data
     print(f"Loading data from {args.raw_json}")
     with open(args.raw_json, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
     
+    if args.max_items:
+        raw_data = raw_data[:args.max_items]
+        print(f"Limited to {args.max_items} items for testing")
+    
     # Build prefixes
-    prefixes = build_prefix_dataset(raw_data)
+    prefixes = build_prefix_dataset(raw_data, args.dataset_name)
     print(f"Generated {len(prefixes)} prefixes from {len(raw_data)} problems")
 
-    # Save meta.json (clean prefixes for upper level)
-    with open(args.meta_json, 'w', encoding='utf-8') as f:
-        json.dump(prefixes, f, ensure_ascii=False, indent=2)
-    print(f"Saved meta dataset to {args.meta_json}")
-
     if args.skip_scoring:
-        # Save train.json without scores for testing
-        with open(args.train_json, 'w', encoding='utf-8') as f:
-            json.dump(prefixes, f, ensure_ascii=False, indent=2)
-        print("Skipped LLM scoring")
-        return
+        # Create dummy training data for testing
+        train_data = []
+        for item in prefixes:
+            train_item = {
+                'id': item['id'],
+                'sid': item['sid'],
+                'input': item['input'],
+                'add': item['add'],
+                'ground_truth': item['ground_truth'],
+                'image_path': item['image_path'],
+                'dataset': item['dataset'],
+                'score': 5,  # Default score
+                'times': 1,
+                'accuracy': 0.5  # Default accuracy
+            }
+            train_data.append(train_item)
+        print("Skipped LLM scoring - using default scores")
+    else:
+        # Initialize LLM judge and score
+        judge = MathStepJudge(args.judge_model)
+        print("Scoring steps with LLM judge...")
+        train_data = judge.batch_score_steps(prefixes)
 
-    # Initialize LLM judge
-    judge = MathStepJudge(args.judge_model)
+    # Build meta dataset
+    meta_data = build_meta_dataset(train_data, args.accuracy_threshold)
 
-    # Score all steps
-    print("Scoring steps with LLM judge...")
-    scores = judge.batch_score_steps(prefixes)
-
-    # Create train dataset with scores
-    train_data = []
-    for item, score in zip(prefixes, scores):
-        train_item = {
-            'id': item['id'],
-            'sid': item['sid'],
-            'input': item['input'],
-            'add': item['add'],
-            'ground_truth': item['ground_truth'],
-            'score': int(score * 10),  # Convert to 0-10 scale
-            'accuracy': score,        # Keep 0-1 scale
-            'llm_judge_score': score  # Original LLM score
-        }
-        train_data.append(train_item)
-
-    # Save train.json (with scores for lower level)
+    # Save results
     with open(args.train_json, 'w', encoding='utf-8') as f:
         json.dump(train_data, f, ensure_ascii=False, indent=2)
-    print(f"Saved train dataset to {args.train_json}")
+    print(f"Saved training dataset to {args.train_json}")
+    
+    with open(args.meta_json, 'w', encoding='utf-8') as f:
+        json.dump(meta_data, f, ensure_ascii=False, indent=2)
+    print(f"Saved meta dataset to {args.meta_json}")
     
     # Print statistics
-    print(f"Score statistics:")
-    print(f"  Mean score: {sum(scores)/len(scores):.3f}")
-    print(f"  Min score: {min(scores):.3f}")
-    print(f"  Max score: {max(scores):.3f}")
-    print(f"  High scores (>0.8): {sum(1 for s in scores if s > 0.8)}")
-    print(f"  Low scores (<0.3): {sum(1 for s in scores if s < 0.3)}")
+    accuracies = [item['accuracy'] for item in train_data]
+    true_count = sum(1 for item in meta_data if item['true_false'])
+    
+    print(f"\nResults Summary:")
+    print(f"  Training samples: {len(train_data)}")
+    print(f"  Meta samples: {len(meta_data)}")
+    print(f"  Mean accuracy: {sum(accuracies)/len(accuracies):.3f}")
+    print(f"  Min accuracy: {min(accuracies):.3f}")
+    print(f"  Max accuracy: {max(accuracies):.3f}")
+    print(f"  High quality steps (>0.8): {sum(1 for a in accuracies if a > 0.8)}")
+    print(f"  Meta true labels: {true_count}/{len(meta_data)} ({true_count/len(meta_data)*100:.1f}%)")
 
 
 if __name__ == '__main__':
