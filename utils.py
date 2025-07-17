@@ -87,26 +87,14 @@ import json
 
 
 def create_dataset_mapping(json_file_path):
-    """
-    从JSON文件中提取所有唯一的dataset名称，并创建一个从0开始递增的数字映射字典
-
-    参数:
-    json_file_path: JSON文件路径
-
-    返回:
-    一个字典，格式为 {dataset_name1: 0, dataset_name2: 1, ...}
-    """
-    # 读取JSON文件
     with open(json_file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    # 提取所有唯一的dataset名称
     unique_datasets = set()
     for item in data:
         if "dataset" in item:
             unique_datasets.add(item["dataset"])
 
-    # 创建映射字典（按字母排序）
     sorted_datasets = sorted(list(unique_datasets))
     mapping = {dataset: idx for idx, dataset in enumerate(sorted_datasets)}
 
