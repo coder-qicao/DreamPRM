@@ -101,7 +101,7 @@ class Upper(ImplicitProblem):
         upper_loss.append(loss.item())
         print(outputs.item(), labels.item(), loss.item())
         # torch.cuda.empty_cache()
-        if len(upper_loss) == 10:
+        if len(upper_loss) == len(meta_dataloader):
             mean_outer_loss = np.mean(upper_loss)
             wandb.log({"outer_loss": mean_outer_loss})
             upper_loss.clear()
@@ -146,7 +146,7 @@ class Lower(ImplicitProblem):
         weighted_loss = self.upper(domain_strings, loss)
         lower_loss.append(loss.item())
         lower_weighted_loss.append(weighted_loss.item())
-        if len(lower_loss) == 100:
+        if len(lower_loss) == len(train_dataloader):
             mean_inner_loss = np.mean(lower_loss)
             mean_inner_weighted_loss = np.mean(lower_weighted_loss)
             wandb.log({"inner_loss": mean_inner_loss,
@@ -182,9 +182,9 @@ class ReweightingEngine(Engine):
     @torch.no_grad()
     def validation(self):
         torch.save(
-            self.inner.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
+            self.lower.module.LN.state_dict(), f"{args.weights_path}/LN_weights.pt"
         )
-        self.inner.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
+        self.lower.module.base_model.save_pretrained(f"{args.weights_path}/base_model")
         torch.save(
             self.outer.state_dict(),
             f"{args.weights_path}/domain_weights.pt",
