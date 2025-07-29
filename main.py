@@ -196,7 +196,7 @@ upper_config = Config(type="darts", precision=args.precision, retain_graph=True)
 lower_config = Config(type="darts", precision=args.precision, unroll_steps=args.unroll_steps, gradient_accumulation=args.gradiant_accumulation)
 engine_config = EngineConfig(
     train_iters=args.iteration_num,
-    valid_step=args.parser.save_every_iterations,
+    valid_step=args.save_every_iterations,
     strategy=args.strategy,
     roll_back=args.rollback,
     logger_type="wandb",

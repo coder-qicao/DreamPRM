@@ -1,4 +1,4 @@
-betty==0.4.19
+betty-ml==0.4.19
 datasets==3.0.2
 flash_attn==2.7.4.post1
 huggingface-hub==0.30.2
