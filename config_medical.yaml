@@ -1,0 +1,79 @@
+# 医学影像分析配置文件
+
+# ===== 数据配置 =====
+data:
+  segmentation_json: "segmentation.json"
+  processed_json: "segmentation_processed.json"
+  train_json: "data/medical_train.json"
+  meta_json: "data/medical_meta.json"
+
+  # 限制处理的患者数量（None 表示处理全部）
+  max_patients: 10
+
+# ===== API 配置 =====
+api:
+  key_path: "api.txt"
+  base_url: "https://api.apiyi.com/v1/chat/completions"
+
+  # CoT 生成配置
+  cot_generation:
+    model: "o4-mini"  # o4-mini 或 gpt-4o
+    num_cots: 8  # 每个问题生成的 CoT 数量
+    reasoning_effort: "high"  # low, medium, high (仅用于 o4-mini)
+    max_tokens: 2000
+
+  # 评估配置
+  evaluation:
+    model: "gpt-4o"
+    max_tokens: 1000
+
+# ===== 训练配置 =====
+training:
+  weights_path: "weights_medical"
+  iteration_num: 5000
+  save_every_iterations: 500
+
+  # 优化器配置
+  lr: 1.0e-4
+  meta_lr: 0.01
+  weight_decay: 1.0e-3
+  meta_weight_decay: 0.0
+
+  # 调度器配置
+  scheduler_step_size: 2000
+  scheduler_gamma: 0.5
+
+  # 双层优化配置
+  unroll_steps: 5
+  gradient_accumulation: 1
+
+  # 其他
+  batch_size: 1
+  max_epoch: 50
+  seed: 1
+  use_wandb: false
+
+# ===== 评估配置 =====
+evaluation:
+  output_dir: "evaluation_results"
+
+  # 评估模式: zero_shot, best_of_n, prm_guided
+  modes:
+    - zero_shot
+    - best_of_n
+
+# ===== 设备配置 =====
+device:
+  type: "cuda"  # cuda 或 cpu
+  precision: "bf16"  # bf16, fp16, fp32
+
+# ===== 任务配置 =====
+tasks:
+  - name: "Lymphatic_node_transfer"
+    description: "Determine if there is lymphatic node transfer (metastasis)"
+
+  - name: "Invade the uterus"
+    description: "Determine if the tumor invades the uterus"
+
+  - name: "Invade the vagina"
+    description: "Determine if the tumor invades the vagina"
